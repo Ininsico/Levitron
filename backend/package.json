@@ -1,0 +1,27 @@
+{
+  "name": "levitron-api",
+  "version": "0.1.0",
+  "description": "Levitron API - open source AI presentation & PDF generator",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js"
+  },
+  "keywords": [
+    "levitron",
+    "presentations",
+    "pdf",
+    "ai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^8.0.0"
+  }
+}
