@@ -2,14 +2,23 @@ import { readSession } from './session.js'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 
-const UNREACHABLE = 'Cannot reach the Levitron API. Is the backend running on port 4000?'
+/**
+ * User-facing copy only. Technical detail goes to the console — this text can
+ * reach someone who has no idea what a backend, a port or a proxy is, so it
+ * never names them.
+ */
+const OFFLINE = 'We could not reach the server. Check your connection and try again.'
+const SERVER_ERROR = 'Something went wrong on our end. Please try again in a moment.'
 
-function fallbackMessage(status) {
-  if (status === 502 || status === 503 || status === 504) {
-    return UNREACHABLE
-  }
+function messageFor(status, payload) {
+  // 5xx text comes from the gateway or the framework rather than from something
+  // the user can act on, so it is replaced instead of shown.
+  if (status === 502 || status === 503 || status === 504) return OFFLINE
+  if (status >= 500) return SERVER_ERROR
 
-  return `Request failed with status ${status}`
+  // 4xx messages are written for people ("That email is already registered"),
+  // so those are passed through.
+  return payload?.error ?? 'That request could not be completed.'
 }
 
 async function request(path, options = {}) {
@@ -24,10 +33,12 @@ async function request(path, options = {}) {
 
   try {
     response = await fetch(`${API_BASE}${path}`, { ...options, headers })
-  } catch {
+  } catch (cause) {
     // fetch only rejects when the request never completed at all — server down,
-    // DNS failure, offline. An unreachable proxy lands here too.
-    const error = new Error(UNREACHABLE)
+    // offline, DNS. The detail is for whoever is debugging, not for the screen.
+    console.error(`[api] ${options.method ?? 'GET'} ${path} — request did not complete`, cause)
+
+    const error = new Error(OFFLINE)
     error.status = 0
 
     throw error
@@ -36,7 +47,11 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
-    const error = new Error(payload?.error ?? fallbackMessage(response.status))
+    if (response.status >= 500) {
+      console.error(`[api] ${options.method ?? 'GET'} ${path} → ${response.status}`, payload)
+    }
+
+    const error = new Error(messageFor(response.status, payload))
     error.status = response.status
 
     throw error
@@ -121,7 +136,7 @@ export async function exportDocument({ id, format }) {
   }).catch(() => null)
 
   if (!response) {
-    const error = new Error(UNREACHABLE)
+    const error = new Error(OFFLINE)
     error.status = 0
 
     throw error
@@ -129,7 +144,7 @@ export async function exportDocument({ id, format }) {
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
-    const error = new Error(payload?.error ?? fallbackMessage(response.status))
+    const error = new Error(messageFor(response.status, payload))
     error.status = response.status
 
     throw error

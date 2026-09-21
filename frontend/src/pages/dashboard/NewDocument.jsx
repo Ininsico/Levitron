@@ -296,9 +296,8 @@ export default function NewDocument() {
               </span>
             ) : (
               <span>
-                No model key is configured, so drafts come from Levitron&apos;s built-in engine. Add{' '}
-                <code className="font-mono text-ink-900">AI_API_KEY</code> to{' '}
-                <code className="font-mono text-ink-900">backend/.env</code> to draft with a model instead.
+                Using the built-in draft engine, which structures your brief or your own content. No
+                model is connected.
               </span>
             )}
           </p>

@@ -16,25 +16,24 @@ export default defineConfig({
       '/api': {
         target: API_TARGET,
         changeOrigin: true,
-        // Without this a backend that is still booting, or restarting under
-        // --watch, shows up as a bare 502 with no explanation anywhere.
+        // Dev-only. The technical detail goes to the terminal where a developer
+        // can act on it; the response body stays neutral, because it can reach
+        // the browser of someone who is not a developer.
         configure: (proxy) => {
           proxy.on('error', (error, req, res) => {
             const reason =
               error.code === 'ECONNREFUSED'
-                ? `Nothing is listening on ${API_TARGET}.`
-                : `The connection to ${API_TARGET} failed (${error.code ?? error.message}).`
+                ? `nothing is listening on ${API_TARGET}`
+                : `the connection to ${API_TARGET} failed (${error.code ?? error.message})`
 
-            console.error(`[api proxy] ${req.method} ${req.url} — ${reason}`)
+            console.error(
+              `[api proxy] ${req.method} ${req.url} — ${reason}. Start the API with "npm run dev" in backend/.`,
+            )
 
             if (res.headersSent || typeof res.writeHead !== 'function') return
 
             res.writeHead(502, { 'Content-Type': 'application/json' })
-            res.end(
-              JSON.stringify({
-                error: `Cannot reach the Levitron API. ${reason} Start it with "npm run dev" in backend/.`,
-              }),
-            )
+            res.end(JSON.stringify({ error: 'The service is temporarily unavailable.' }))
           })
         },
       },
