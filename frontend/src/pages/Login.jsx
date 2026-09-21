@@ -18,6 +18,7 @@ export default function Login() {
 
   const [mode, setMode] = useState('signin')
   const [fields, setFields] = useState({ name: '', email: '', password: '' })
+  const [reveal, setReveal] = useState(false)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
@@ -53,6 +54,7 @@ export default function Login() {
 
   function switchMode() {
     setMode(isSignup ? 'signin' : 'signup')
+    setReveal(false)
     setError('')
   }
 
@@ -137,17 +139,28 @@ export default function Login() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-ink-700">Password</span>
-              <input
-                className="field"
-                type="password"
-                name="password"
-                autoComplete={isSignup ? 'new-password' : 'current-password'}
-                placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
-                required
-                minLength={isSignup ? 8 : undefined}
-                value={fields.password}
-                onChange={update('password')}
-              />
+              <div className="relative">
+                <input
+                  className="field pr-11"
+                  type={reveal ? 'text' : 'password'}
+                  name="password"
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
+                  placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
+                  required
+                  minLength={isSignup ? 8 : undefined}
+                  value={fields.password}
+                  onChange={update('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setReveal((current) => !current)}
+                  aria-label={reveal ? 'Hide password' : 'Show password'}
+                  aria-pressed={reveal}
+                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-cream-200 hover:text-ink-950"
+                >
+                  <span className="h-4 w-4">{reveal ? icons.eyeOff : icons.eye}</span>
+                </button>
+              </div>
             </label>
 
             <div className="space-y-4 pt-2">

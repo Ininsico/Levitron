@@ -4,6 +4,8 @@ import {
   Check,
   CircleAlert,
   Download,
+  Eye,
+  EyeOff,
   Lock,
   Menu,
   Minus,
@@ -38,4 +40,6 @@ export const icons = {
   lock: <Lock {...iconProps} />,
   star: <Star {...iconProps} />,
   alert: <CircleAlert {...iconProps} />,
+  eye: <Eye {...iconProps} />,
+  eyeOff: <EyeOff {...iconProps} />,
 }
