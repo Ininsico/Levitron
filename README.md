@@ -11,6 +11,8 @@ Word or PDF. Self-hostable, themeable, MIT licensed — you own the pipeline, no
 - **Auth** — email + password, scrypt hashing, JWT bearer sessions
 - **Generation** — any OpenAI-compatible endpoint, plus a built-in offline draft engine
 - **Export** — real `.pptx` (pptxgenjs), `.docx` (docx) and `.pdf` (pdfkit)
+- **Themes** — 10 presentation themes, carried into every export
+- **Animation** — GSAP 3 drives the in-app preview; see the note on why it stops there
 
 ---
 
@@ -24,11 +26,13 @@ real Office or PDF file.
 | Landing page (React + Vite + Tailwind)         | Built             |
 | User accounts (register / login / session)     | Built and tested  |
 | Dashboard (home, create, document view)        | Built and tested  |
-| Draft generation (model + built-in engine)     | Built and tested  |
+| Draft from a brief, or from your own content   | Built and tested  |
+| 10 themes, applied to preview and export       | Built and tested  |
 | PPTX / DOCX / PDF export                       | Built and tested  |
+| GSAP-animated slide preview                    | Built             |
 | Waitlist, health, stats API                    | Built and tested  |
 | Design system (`main.css`)                     | Built             |
-| **Theme engine, image generation, CLI, Docker** | **Not built yet** |
+| **Editing slides in place, image generation, CLI** | **Not built yet** |
 
 Generation uses your configured model when there is one. With no model configured it uses the
 built-in draft engine, and the UI says so on the result — nothing pretends a model wrote something
@@ -58,18 +62,22 @@ Levitron/
 │       │   ├── Login.jsx         sign in / create account
 │       │   └── dashboard/
 │       │       ├── DashboardHome.jsx     stats + recent documents
-│       │       ├── NewDocument.jsx       describe it → generate
-│       │       └── DocumentDetail.jsx    review, rename, export, delete
+│       │       ├── NewDocument.jsx       brief or pasted content → generate
+│       │       └── DocumentDetail.jsx    preview, restyle, export, delete
 │       ├── components/
 │       │   ├── Navbar.jsx  Hero.jsx  Features.jsx  HowItWorks.jsx
 │       │   ├── Stats.jsx  OpenSource.jsx  Faq.jsx  CallToAction.jsx  Footer.jsx
+│       │   ├── SlidePreview.jsx  GSAP-animated deck player
+│       │   ├── ThemePicker.jsx   theme swatches
 │       │   ├── Logo.jsx          the wordmark
 │       │   ├── icons.jsx         maps semantic names → Lucide components
 │       │   ├── RequireAuth.jsx   route guard
 │       │   ├── ScrollToTop.jsx   resets scroll on navigation
 │       │   └── SectionHeading.jsx
 │       ├── context/AuthContext.jsx
-│       ├── hooks/useReveal.js    IntersectionObserver scroll reveals
+│       ├── hooks/
+│       │   ├── useReveal.js       IntersectionObserver scroll reveals (landing)
+│       │   └── useGsapReveal.js   GSAP stagger for dashboard lists
 │       ├── data/content.js       every string on the landing page
 │       └── lib/
 │           ├── api.js            fetch wrapper, injects the bearer token
@@ -81,9 +89,10 @@ Levitron/
         ├── db.js                 Mongoose connection
         ├── models/               User.js, WaitlistSubscriber.js, Document.js
         ├── lib/
+        │   ├── themes.js         10 themes — one source of truth
         │   ├── password.js       scrypt hashing
         │   ├── tokens.js         JWT signing
-        │   ├── generator/        ai.js, draft.js, index.js
+        │   ├── generator/        ai.js, draft.js, content.js, index.js
         │   └── exporters/        pptx.js, docx.js, pdf.js, index.js
         ├── middleware/           requireAuth.js, requireDatabase.js
         ├── routes/               index.js, auth.js, documents.js, waitlist.js
@@ -261,15 +270,22 @@ forbidden error, so ids cannot be probed.
 {
   "kind": "deck",
   "topic": "Q3 platform review for the board, leading with reliability numbers",
+  "input": "",
+  "theme": "midnight",
   "audience": "the board",
   "tone": "confident but calm",
   "slideCount": 12
 }
 ```
 
-`kind` is `deck` or `document`, `topic` is 8–2000 characters, and `slideCount` (4–30) only applies
-to decks. `201` returns the created document, including `source` — `ai` or `draft` — so the client
-can show honestly which engine wrote it.
+`kind` is `deck` or `document`, `slideCount` (4–30) only applies to decks, and `theme` is any id
+from `/documents/capabilities`. `201` returns the created document, including `source` — `ai` or
+`draft` — so the client can show honestly which engine wrote it.
+
+Give it **either** a `topic` (8–2000 characters) **or** an `input` of your own material (up to
+20000 characters). With an `input`, the generator builds the outline from your content instead of
+inventing one; `topic` becomes an optional title hint. Over-long content is rejected with a `400`
+rather than silently truncated.
 
 Format availability:
 
@@ -344,6 +360,44 @@ and the `[Content_Types].xml` entry.
 > their ICNS/JXL/HEIF parsers. `backend/package.json` pins `image-size@^2.0.4` through an npm
 > `overrides` entry, which resolves it without downgrading `pptxgenjs`. Verified to work with
 > image-bearing decks as well as text-only ones.
+
+---
+
+## Themes
+
+Ten themes live in `backend/src/lib/themes.js` — one source of truth shared by the preview and all
+three exporters, so a file looks like what you reviewed.
+
+| | |
+| --- | --- |
+| **Light** | `mono` cream + black · `ink` white + serif · `sand` warm paper + terracotta |
+| **Dark** | `midnight` near-black · `graphite` grey · `ember` charcoal + orange · `forest` green · `plum` violet · `ocean` teal · `blueprint` navy |
+
+Each theme defines background, surface, ink, body, muted, accent, and the fonts for headings and
+body. Change a theme and the deck restyles immediately — you can also switch a theme after the fact
+from the document page, and the next export picks it up.
+
+The PDF exporter maps each theme onto the standard PDF base fonts (Helvetica or Times) because
+pdfkit cannot embed arbitrary fonts without shipping a font file; PPTX and DOCX use the real font
+names and resolve them on the viewer's machine.
+
+## Animation, and where it stops
+
+`SlidePreview.jsx` is a GSAP timeline: the accent bar wipes in, the heading rises, bullets stagger
+up behind it. Arrow keys move between slides, and Play auto-advances. `useGsapReveal.js` staggers
+dashboard lists once their data has actually loaded — it runs in `useLayoutEffect` so nothing
+flashes at full opacity first, and both honour `prefers-reduced-motion`.
+
+**GSAP cannot be exported into a `.pptx`.** GSAP is browser JavaScript; PPTX is a static Office
+format. `pptxgenjs` has no transition or animation API — its type definitions contain no
+`transition`, `animation` or `entrance` at all (checked, not assumed), and no library converts GSAP
+timelines into PowerPoint's native animation XML. So:
+
+- **In the app** — fully animated, GSAP-driven preview
+- **In the export** — the theme (colours, fonts, layout, speaker notes) carries across; the motion does not
+
+Native PowerPoint animation would mean writing DrawingML timing XML into the slide parts by hand —
+a separate, much larger feature, and not something the current exporter does.
 
 ---
 
@@ -433,12 +487,14 @@ in one place. They fill their wrapper via `h-full w-full` and inherit colour fro
 - [x] Landing page and design system
 - [x] Account system: register, login, JWT sessions, protected route
 - [x] Dashboard: workspace, create, review, export
-- [x] Draft generation through any OpenAI-compatible endpoint, with an offline fallback
+- [x] Draft from a brief, or structure your own pasted content
+- [x] 10 themes, applied to both the preview and the exported file
+- [x] GSAP-animated slide preview with keyboard navigation
 - [x] PPTX, DOCX and PDF export
 - [x] Waitlist, health and stats API
-- [ ] Editing the outline in place (today a document is renamed and exported, not rewritten)
+- [ ] Editing slides in place (today a document is renamed, restyled and exported)
 - [ ] Regenerating a single slide or section
-- [ ] Theme engine (palette, type scale, grid) driven by CSS tokens
+- [ ] Native PowerPoint transitions in the exported deck (hand-written DrawingML timing)
 - [ ] Images and vector charts inside exports
 - [ ] CLI (`levitron build talk.yaml --out talk.pdf`) and Docker image
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import ThemePicker from '../../components/ThemePicker.jsx'
 import { icons } from '../../components/icons.jsx'
 import { createDocument, getCapabilities } from '../../lib/api.js'
 
@@ -25,20 +26,29 @@ export default function NewDocument() {
   const navigate = useNavigate()
 
   const [kind, setKind] = useState('deck')
+  const [mode, setMode] = useState('prompt')
   const [topic, setTopic] = useState('')
+  const [content, setContent] = useState('')
   const [audience, setAudience] = useState('')
   const [tone, setTone] = useState('')
   const [slideCount, setSlideCount] = useState(10)
+  const [theme, setTheme] = useState('mono')
+  const [themes, setThemes] = useState([])
+  const [maxContent, setMaxContent] = useState(20000)
+  const [generator, setGenerator] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
-  const [generator, setGenerator] = useState(null)
 
   useEffect(() => {
     let active = true
 
     getCapabilities()
       .then((data) => {
-        if (active) setGenerator(data.generator)
+        if (!active) return
+        setGenerator(data.generator)
+        setThemes(data.themes ?? [])
+        setTheme(data.defaultTheme ?? 'mono')
+        if (data.limits?.maxContentLength) setMaxContent(data.limits.maxContentLength)
       })
       .catch(() => {})
 
@@ -53,7 +63,16 @@ export default function NewDocument() {
     setError('')
 
     try {
-      const created = await createDocument({ kind, topic, audience, tone, slideCount: Number(slideCount) })
+      const created = await createDocument({
+        kind,
+        topic,
+        input: mode === 'content' ? content : '',
+        audience,
+        tone,
+        theme,
+        slideCount: Number(slideCount),
+      })
+
       navigate(`/app/documents/${created.id}`, { replace: true })
     } catch (submitError) {
       setError(submitError.message)
@@ -73,7 +92,7 @@ export default function NewDocument() {
 
       <h1 className="mt-4 text-3xl text-ink-950">What do you need?</h1>
       <p className="mt-2 text-sm text-ink-600">
-        Describe the outcome, not the format. Levitron drafts the structure and you export from there.
+        Describe the outcome, or paste material you already have and let Levitron structure it.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-9 space-y-8">
@@ -118,25 +137,89 @@ export default function NewDocument() {
           </div>
         </fieldset>
 
-        <label className="block">
-          <span className="mb-2 block text-sm font-medium text-ink-700">
-            {kind === 'deck' ? 'What is the presentation about?' : 'What is the document about?'}
-          </span>
-          <textarea
-            className="field min-h-32 resize-y"
-            required
-            minLength={8}
-            maxLength={2000}
-            value={topic}
-            onChange={(event) => setTopic(event.target.value)}
-            placeholder={
-              kind === 'deck'
-                ? 'A Q3 platform review for the board, leading with reliability numbers'
-                : 'Why we should automate report generation, and what the pilot would look like'
-            }
-          />
-          <span className="mt-1.5 block text-xs text-ink-400">{topic.length} / 2000</span>
-        </label>
+        <fieldset>
+          <legend className="mb-3 block text-sm font-medium text-ink-700">Starting point</legend>
+
+          <div className="inline-flex rounded-xl border border-ink-950/12 bg-cream-50 p-1">
+            {[
+              { id: 'prompt', label: 'Describe it' },
+              { id: 'content', label: 'Paste your content' },
+            ].map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setMode(option.id)}
+                aria-pressed={mode === option.id}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  mode === option.id ? 'bg-ink-950 text-cream-50' : 'text-ink-600 hover:text-ink-950'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {mode === 'prompt' ? (
+            <label className="mt-5 block">
+              <span className="mb-2 block text-sm font-medium text-ink-700">
+                {kind === 'deck' ? 'What is the presentation about?' : 'What is the document about?'}
+              </span>
+              <textarea
+                className="field min-h-32 resize-y"
+                required
+                minLength={8}
+                maxLength={2000}
+                value={topic}
+                onChange={(event) => setTopic(event.target.value)}
+                placeholder={
+                  kind === 'deck'
+                    ? 'A Q3 platform review for the board, leading with reliability numbers'
+                    : 'Why we should automate report generation, and what the pilot would look like'
+                }
+              />
+              <span className="mt-1.5 block text-xs text-ink-400">{topic.length} / 2000</span>
+            </label>
+          ) : (
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-ink-700">Your content</span>
+                <textarea
+                  className="field min-h-64 resize-y font-mono text-[13px] leading-relaxed"
+                  required
+                  maxLength={maxContent}
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  placeholder={
+                    'Q3 Platform Review\n\nOur uptime held at 99.98%\nNo customer-visible incidents\n\nWhat changed\n\n- Active-active failover\n- Deploy time down to 6 minutes'
+                  }
+                />
+                <span className="mt-1.5 block text-xs text-ink-400">
+                  {content.length} / {maxContent}
+                </span>
+              </label>
+
+              <p className="rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
+                Each block separated by a blank line becomes a {kind === 'deck' ? 'slide' : 'section'}. A short line on
+                its own becomes the heading, and everything under it becomes the content. Lines starting with{' '}
+                <code className="font-mono text-ink-900">-</code> become bullets.
+              </p>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-ink-700">
+                  Title or brief <span className="font-normal text-ink-400">optional</span>
+                </span>
+                <input
+                  className="field"
+                  value={topic}
+                  onChange={(event) => setTopic(event.target.value)}
+                  placeholder="Leave empty to take the title from your first line"
+                />
+              </label>
+            </div>
+          )}
+        </fieldset>
+
+        <ThemePicker themes={themes} value={theme} onChange={setTheme} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
@@ -188,8 +271,8 @@ export default function NewDocument() {
             ) : (
               <span>
                 No model key is configured, so drafts come from Levitron&apos;s built-in engine. Add{' '}
-                <code className="font-mono text-ink-900">AI_API_KEY</code> to <code className="font-mono text-ink-900">backend/.env</code>{' '}
-                to draft with a model instead.
+                <code className="font-mono text-ink-900">AI_API_KEY</code> to{' '}
+                <code className="font-mono text-ink-900">backend/.env</code> to draft with a model instead.
               </span>
             )}
           </p>

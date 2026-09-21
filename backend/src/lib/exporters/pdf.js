@@ -1,16 +1,22 @@
 import PDFDocument from 'pdfkit';
 
-const INK = '#000000';
-const BODY = '#262626';
-const MUTED = '#6f6f6f';
+import { resolveTheme } from '../themes.js';
 
-function footerLine(document) {
-  const stamp = new Date().toISOString().slice(0, 10);
+// pdfkit can only use the standard base fonts unless a font file is embedded,
+// so each theme maps onto Helvetica or Times.
+const BASE_FONTS = {
+  sans: { bold: 'Helvetica-Bold', regular: 'Helvetica', italic: 'Helvetica-Oblique' },
+  serif: { bold: 'Times-Bold', regular: 'Times-Roman', italic: 'Times-Italic' },
+};
 
-  return `Levitron · ${document.kind === 'deck' ? 'Presentation outline' : 'Document'} · ${stamp}`;
+function hex(value) {
+  return `#${value}`;
 }
 
 export function renderPdf(document) {
+  const theme = resolveTheme(document.theme);
+  const fonts = BASE_FONTS[theme.pdfFamily] ?? BASE_FONTS.sans;
+
   return new Promise((resolve, reject) => {
     const pdf = new PDFDocument({
       size: 'A4',
@@ -24,20 +30,47 @@ export function renderPdf(document) {
     pdf.on('end', () => resolve(Buffer.concat(chunks)));
     pdf.on('error', reject);
 
-    pdf.font('Helvetica-Bold').fontSize(26).fillColor(INK).text(document.title);
-    pdf.moveDown(0.35);
-    pdf.font('Helvetica').fontSize(9).fillColor(MUTED).text(footerLine(document));
-    pdf.moveDown(1.6);
+    // Dark themes need a full-bleed background on every page, including the
+    // ones pdfkit adds itself when content overflows.
+    const paintBackground = () => {
+      pdf.save();
+      pdf.rect(0, 0, pdf.page.width, pdf.page.height).fill(hex(theme.background));
+      pdf.restore();
+    };
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    const label = document.kind === 'deck' ? 'Presentation outline' : 'Document';
+
+    if (theme.background !== 'FFFFFF') {
+      pdf.on('pageAdded', paintBackground);
+    }
+
+    paintBackground();
+
+    pdf.font(fonts.bold).fontSize(26).fillColor(hex(theme.ink)).text(document.title);
+    pdf.moveDown(0.3);
+
+    pdf
+      .rect(pdf.x, pdf.y, 64, 4)
+      .fill(hex(theme.accent));
+
+    pdf.moveDown(0.6);
+    pdf
+      .font(fonts.regular)
+      .fontSize(9)
+      .fillColor(hex(theme.muted))
+      .text(`Levitron · ${label} · ${stamp}`);
+    pdf.moveDown(1.5);
 
     if (document.kind === 'deck') {
       document.slides.forEach((slide, index) => {
         if (index > 0) pdf.moveDown(1.2);
 
-        pdf.font('Helvetica-Bold').fontSize(15).fillColor(INK).text(`${index + 1}. ${slide.heading}`);
+        pdf.font(fonts.bold).fontSize(15).fillColor(hex(theme.ink)).text(`${index + 1}. ${slide.heading}`);
         pdf.moveDown(0.3);
 
         slide.bullets.forEach((bullet) => {
-          pdf.font('Helvetica').fontSize(11).fillColor(BODY).text(bullet, {
+          pdf.font(fonts.regular).fontSize(11).fillColor(hex(theme.body)).text(bullet, {
             indent: 14,
             bullet: { character: '\u2022' },
             lineGap: 3,
@@ -46,7 +79,7 @@ export function renderPdf(document) {
 
         if (slide.notes) {
           pdf.moveDown(0.25);
-          pdf.font('Helvetica-Oblique').fontSize(9).fillColor(MUTED).text(`Speaker notes: ${slide.notes}`, {
+          pdf.font(fonts.italic).fontSize(9).fillColor(hex(theme.muted)).text(`Speaker notes: ${slide.notes}`, {
             indent: 14,
             lineGap: 2,
           });
@@ -54,11 +87,14 @@ export function renderPdf(document) {
       });
     } else {
       document.sections.forEach((section) => {
-        pdf.font('Helvetica-Bold').fontSize(14).fillColor(INK).text(section.heading);
+        pdf.font(fonts.bold).fontSize(14).fillColor(hex(theme.ink)).text(section.heading);
         pdf.moveDown(0.35);
 
         section.paragraphs.forEach((paragraph) => {
-          pdf.font('Helvetica').fontSize(11).fillColor(BODY).text(paragraph, { lineGap: 4, align: 'justify' });
+          pdf.font(fonts.regular).fontSize(11).fillColor(hex(theme.body)).text(paragraph, {
+            lineGap: 4,
+            align: 'justify',
+          });
           pdf.moveDown(0.5);
         });
 

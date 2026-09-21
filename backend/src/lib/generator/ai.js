@@ -37,7 +37,7 @@ function systemPrompt(kind) {
   ].join('\n');
 }
 
-function userPrompt({ topic, kind, audience, tone, slideCount }) {
+function userPrompt({ topic, kind, audience, tone, slideCount, content }) {
   const lines = [
     kind === 'deck' ? 'Write a presentation outline for:' : 'Write a document about:',
     topic,
@@ -47,6 +47,18 @@ function userPrompt({ topic, kind, audience, tone, slideCount }) {
 
   if (audience) lines.push(`Audience: ${audience}`);
   if (tone) lines.push(`Tone: ${tone}`);
+
+  if (content && String(content).trim()) {
+    lines.push(
+      '',
+      'The author supplied the following material. Build the outline from it.',
+      'Every fact, figure, name and claim in their material must survive intact — never invent numbers, dates or quotes, and never contradict them.',
+      'You may add framing and implications to make each slide worth presenting, but the substance has to be theirs.',
+      '---',
+      String(content).trim().slice(0, 20000),
+      '---',
+    );
+  }
 
   return lines.join('\n');
 }

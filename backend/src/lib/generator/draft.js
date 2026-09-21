@@ -1,3 +1,5 @@
+import { contentTitle, structureDeckFromContent, structureDocumentFromContent } from './content.js';
+
 const MAX_TOPIC_IN_HEADING = 58;
 
 function phrase(topic) {
@@ -169,7 +171,38 @@ function documentSkeleton(subject, audience, tone) {
   ];
 }
 
-export function generateDraft({ topic, kind, audience = '', tone = '', slideCount = 10 }) {
+export function generateDraft({
+  topic,
+  content = '',
+  kind,
+  audience = '',
+  tone = '',
+  slideCount = 10,
+}) {
+  // When the author supplied their own material, structure that instead of
+  // inventing a skeleton — their words take priority over the template.
+  if (String(content).trim()) {
+    const maxSlides = Math.max(4, Math.min(30, Number(slideCount) || 10));
+
+    if (kind === 'deck') {
+      return {
+        title: contentTitle(content, topic),
+        source: 'draft',
+        model: '',
+        slides: structureDeckFromContent(content, { maxSlides }),
+        sections: [],
+      };
+    }
+
+    return {
+      title: contentTitle(content, topic),
+      source: 'draft',
+      model: '',
+      slides: [],
+      sections: structureDocumentFromContent(content),
+    };
+  }
+
   const subject = phrase(topic) || 'Untitled';
   const title = draftTitle(topic);
 

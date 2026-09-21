@@ -3,22 +3,20 @@ import mongoose from 'mongoose';
 
 import { formatsFor, isSupported, renderExport } from '../lib/exporters/index.js';
 import { generateOutline, generatorStatus } from '../lib/generator/index.js';
+import { DEFAULT_THEME_ID, isKnownTheme, listThemes } from '../lib/themes.js';
 import { Document } from '../models/Document.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireDatabase } from '../middleware/requireDatabase.js';
 
 const MIN_TOPIC_LENGTH = 8;
 const MAX_TOPIC_LENGTH = 2000;
+const MAX_CONTENT_LENGTH = 20000;
 const MIN_SLIDES = 4;
 const MAX_SLIDES = 30;
 
 export const documentsRouter = Router();
 
 documentsRouter.use(requireDatabase, requireAuth);
-
-function cleanText(value, max) {
-  return typeof value === 'string' ? value.trim().slice(0, max) : '';
-}
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -29,6 +27,7 @@ function summary(document) {
     id: document._id.toString(),
     title: document.title,
     kind: document.kind,
+    theme: document.theme,
     source: document.source,
     slideCount: document.slides.length,
     sectionCount: document.sections.length,
@@ -43,6 +42,9 @@ documentsRouter.get('/capabilities', (req, res) => {
   res.json({
     data: {
       generator: generatorStatus(),
+      themes: listThemes(),
+      defaultTheme: DEFAULT_THEME_ID,
+      limits: { maxContentLength: MAX_CONTENT_LENGTH, maxSlides: MAX_SLIDES, maxTopicLength: MAX_TOPIC_LENGTH },
       formats: {
         deck: formatsFor('deck'),
         document: formatsFor('document'),
@@ -58,31 +60,48 @@ documentsRouter.get('/', async (req, res) => {
 });
 
 documentsRouter.post('/', async (req, res) => {
-  const topic = cleanText(req.body?.topic, MAX_TOPIC_LENGTH);
-  const kind = req.body?.kind === 'document' ? 'document' : 'deck';
-  const audience = cleanText(req.body?.audience, 200);
-  const tone = cleanText(req.body?.tone, 80);
-  const slideCount = clamp(Number(req.body?.slideCount) || 10, MIN_SLIDES, MAX_SLIDES);
+  const rawTopic = typeof req.body?.topic === 'string' ? req.body.topic : '';
+  const rawContent = typeof req.body?.input === 'string' ? req.body.input : '';
 
-  if (!topic) {
-    return res.status(400).json({ error: 'Describe what you want to create.' });
+  if (rawTopic.length > MAX_TOPIC_LENGTH) {
+    return res.status(400).json({ error: `Keep the brief under ${MAX_TOPIC_LENGTH} characters.` });
   }
 
-  if (topic.length < MIN_TOPIC_LENGTH) {
+  // Rejected rather than truncated — silently losing someone's pasted content
+  // would be worse than refusing it.
+  if (rawContent.length > MAX_CONTENT_LENGTH) {
+    return res.status(400).json({ error: `Content is limited to ${MAX_CONTENT_LENGTH} characters.` });
+  }
+
+  const topic = rawTopic.trim();
+  const input = rawContent.trim();
+  const kind = req.body?.kind === 'document' ? 'document' : 'deck';
+  const theme = isKnownTheme(req.body?.theme) ? req.body.theme : DEFAULT_THEME_ID;
+  const audience = typeof req.body?.audience === 'string' ? req.body.audience.trim().slice(0, 200) : '';
+  const tone = typeof req.body?.tone === 'string' ? req.body.tone.trim().slice(0, 80) : '';
+  const slideCount = clamp(Number(req.body?.slideCount) || 10, MIN_SLIDES, MAX_SLIDES);
+
+  if (!topic && !input) {
+    return res.status(400).json({ error: 'Describe what you want, or paste the content to work from.' });
+  }
+
+  if (!input && topic.length < MIN_TOPIC_LENGTH) {
     return res
       .status(400)
       .json({ error: `Give it a little more to work with — at least ${MIN_TOPIC_LENGTH} characters.` });
   }
 
-  const outline = await generateOutline({ topic, kind, audience, tone, slideCount });
+  const outline = await generateOutline({ topic, content: input, kind, audience, tone, slideCount });
 
   const created = await Document.create({
     owner: req.user._id,
     title: outline.title,
     kind,
     topic,
+    input,
     audience,
     tone,
+    theme,
     source: outline.source,
     model: outline.model,
     slides: outline.slides,
@@ -118,7 +137,7 @@ documentsRouter.patch('/:id', async (req, res) => {
   }
 
   if (typeof req.body?.title === 'string') {
-    const title = cleanText(req.body.title, 160);
+    const title = req.body.title.trim().slice(0, 160);
 
     if (!title) {
       return res.status(400).json({ error: 'A title is required.' });
@@ -127,15 +146,19 @@ documentsRouter.patch('/:id', async (req, res) => {
     document.title = title;
   }
 
+  if (typeof req.body?.theme === 'string' && isKnownTheme(req.body.theme)) {
+    document.theme = req.body.theme;
+  }
+
   if (Array.isArray(req.body?.slides) && document.kind === 'deck') {
     document.slides = req.body.slides
       .map((slide) => ({
-        heading: cleanText(slide?.heading, 200),
+        heading: typeof slide?.heading === 'string' ? slide.heading.trim().slice(0, 200) : '',
         bullets: (Array.isArray(slide?.bullets) ? slide.bullets : [])
-          .map((bullet) => cleanText(bullet, 300))
+          .map((bullet) => (typeof bullet === 'string' ? bullet.trim().slice(0, 300) : ''))
           .filter(Boolean)
           .slice(0, 8),
-        notes: cleanText(slide?.notes, 2000),
+        notes: typeof slide?.notes === 'string' ? slide.notes.trim().slice(0, 2000) : '',
       }))
       .filter((slide) => slide.heading);
   }
@@ -143,9 +166,9 @@ documentsRouter.patch('/:id', async (req, res) => {
   if (Array.isArray(req.body?.sections) && document.kind === 'document') {
     document.sections = req.body.sections
       .map((section) => ({
-        heading: cleanText(section?.heading, 200),
+        heading: typeof section?.heading === 'string' ? section.heading.trim().slice(0, 200) : '',
         paragraphs: (Array.isArray(section?.paragraphs) ? section.paragraphs : [])
-          .map((paragraph) => cleanText(paragraph, 2000))
+          .map((paragraph) => (typeof paragraph === 'string' ? paragraph.trim().slice(0, 2000) : ''))
           .filter(Boolean)
           .slice(0, 6),
       }))

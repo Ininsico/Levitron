@@ -1,12 +1,10 @@
 import PptxGenJS from 'pptxgenjs';
 
-const PAPER = 'FFFDF8';
-const INK = '000000';
-const BODY = '262626';
-const MUTED = '6F6F6F';
-const FONT = 'Arial';
+import { resolveTheme } from '../themes.js';
 
 export async function renderDeckPptx(document) {
+  const theme = resolveTheme(document.theme);
+
   const pptx = new PptxGenJS();
 
   pptx.layout = 'LAYOUT_16x9';
@@ -17,18 +15,27 @@ export async function renderDeckPptx(document) {
   document.slides.forEach((slide, index) => {
     const sheet = pptx.addSlide();
 
-    sheet.background = { color: PAPER };
+    sheet.background = { color: theme.background };
 
     if (index === 0) {
+      // Title slide: accent bar, title, subtitle, rule.
+      sheet.addShape(pptx.ShapeType.rect, {
+        x: 0.7,
+        y: 1.75,
+        w: 1.6,
+        h: 0.11,
+        fill: { color: theme.accent },
+      });
+
       sheet.addText(slide.heading, {
         x: 0.7,
         y: 2.05,
         w: 8.6,
-        h: 1.5,
-        fontFace: FONT,
+        h: 1.4,
+        fontFace: theme.headFont,
         fontSize: 40,
         bold: true,
-        color: INK,
+        color: theme.ink,
         valign: 'bottom',
       });
 
@@ -36,12 +43,12 @@ export async function renderDeckPptx(document) {
       if (subtitle) {
         sheet.addText(subtitle, {
           x: 0.7,
-          y: 3.6,
+          y: 3.55,
           w: 8.6,
           h: 0.6,
-          fontFace: FONT,
+          fontFace: theme.bodyFont,
           fontSize: 16,
-          color: MUTED,
+          color: theme.muted,
         });
       }
     } else {
@@ -49,20 +56,20 @@ export async function renderDeckPptx(document) {
         x: 0.7,
         y: 0.45,
         w: 8.6,
-        h: 0.9,
-        fontFace: FONT,
+        h: 0.85,
+        fontFace: theme.headFont,
         fontSize: 28,
         bold: true,
-        color: INK,
+        color: theme.ink,
         valign: 'middle',
       });
 
-      sheet.addShape(pptx.ShapeType.line, {
+      sheet.addShape(pptx.ShapeType.rect, {
         x: 0.7,
-        y: 1.42,
-        w: 8.6,
-        h: 0,
-        line: { color: 'D4D4D4', width: 1 },
+        y: 1.38,
+        w: 0.9,
+        h: 0.07,
+        fill: { color: theme.accent },
       });
 
       if (slide.bullets.length) {
@@ -76,9 +83,9 @@ export async function renderDeckPptx(document) {
             y: 1.75,
             w: 8.3,
             h: 3.3,
-            fontFace: FONT,
+            fontFace: theme.bodyFont,
             fontSize: 16,
-            color: BODY,
+            color: theme.body,
             lineSpacingMultiple: 1.4,
             valign: 'top',
           },
@@ -90,9 +97,9 @@ export async function renderDeckPptx(document) {
         y: 5.05,
         w: 0.9,
         h: 0.3,
-        fontFace: FONT,
+        fontFace: theme.bodyFont,
         fontSize: 10,
-        color: MUTED,
+        color: theme.muted,
         align: 'right',
       });
     }

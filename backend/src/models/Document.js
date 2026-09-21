@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+import { DEFAULT_THEME_ID } from '../lib/themes.js';
+
 const slideSchema = new mongoose.Schema(
   {
     heading: { type: String, required: true, trim: true, maxlength: 200 },
@@ -27,9 +29,14 @@ const documentSchema = new mongoose.Schema(
     },
     title: { type: String, required: true, trim: true, maxlength: 160 },
     kind: { type: String, enum: ['deck', 'document'], required: true },
-    topic: { type: String, required: true, trim: true, maxlength: 2000 },
+
+    // A brief is optional when the author pasted their own material instead.
+    topic: { type: String, default: '', trim: true, maxlength: 2000 },
+    input: { type: String, default: '', maxlength: 20000 },
+
     audience: { type: String, default: '', trim: true, maxlength: 200 },
     tone: { type: String, default: '', trim: true, maxlength: 80 },
+    theme: { type: String, default: DEFAULT_THEME_ID, trim: true },
 
     // How the outline was produced, surfaced in the UI so nobody is misled
     // about whether an AI model actually wrote it.
@@ -53,8 +60,10 @@ documentSchema.methods.toPublicJSON = function toPublicJSON() {
     title: this.title,
     kind: this.kind,
     topic: this.topic,
+    hasInput: Boolean(this.input),
     audience: this.audience,
     tone: this.tone,
+    theme: this.theme,
     source: this.source,
     model: this.model,
     slides: this.slides,

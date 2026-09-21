@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import SlidePreview from '../../components/SlidePreview.jsx'
+import ThemePicker from '../../components/ThemePicker.jsx'
 import { icons } from '../../components/icons.jsx'
 import {
   deleteDocument,
@@ -18,11 +20,13 @@ export default function DocumentDetail() {
 
   const [doc, setDoc] = useState(null)
   const [formats, setFormats] = useState([])
+  const [themes, setThemes] = useState([])
   const [title, setTitle] = useState('')
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
+  const [themeSaving, setThemeSaving] = useState(false)
   const [exporting, setExporting] = useState('')
   const [deleting, setDeleting] = useState(false)
 
@@ -38,6 +42,7 @@ export default function DocumentDetail() {
         setDoc(loaded)
         setTitle(loaded.title)
         setFormats(capabilities.formats[loaded.kind] ?? [])
+        setThemes(capabilities.themes ?? [])
         setStatus('ready')
       })
       .catch((loadError) => {
@@ -69,6 +74,22 @@ export default function DocumentDetail() {
       setError(saveError.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleThemeChange(themeId) {
+    if (!doc || themeId === doc.theme) return
+
+    setThemeSaving(true)
+    setError('')
+
+    try {
+      const updated = await updateDocument(id, { theme: themeId })
+      setDoc(updated)
+    } catch (themeError) {
+      setError(themeError.message)
+    } finally {
+      setThemeSaving(false)
     }
   }
 
@@ -123,6 +144,8 @@ export default function DocumentDetail() {
     )
   }
 
+  const activeTheme = themes.find((theme) => theme.id === doc.theme)
+
   return (
     <>
       <nav className="text-sm text-ink-500">
@@ -146,11 +169,20 @@ export default function DocumentDetail() {
       </form>
 
       <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
-        <span className="chip">{doc.kind === 'deck' ? `${doc.slides.length} slides` : `${doc.sections.length} sections`}</span>
+        <span className="chip">
+          {doc.kind === 'deck' ? `${doc.slides.length} slides` : `${doc.sections.length} sections`}
+        </span>
+        {activeTheme ? (
+          <span className="chip">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `#${activeTheme.accent}` }} />
+            {activeTheme.name} theme
+          </span>
+        ) : null}
         <span className="chip">
           <span className="h-1.5 w-1.5 rounded-full bg-ink-950" />
           {doc.source === 'ai' ? `AI · ${doc.model}` : 'Built-in draft engine'}
         </span>
+        {doc.hasInput ? <span className="chip">From your content</span> : null}
         <span className="chip">Updated {dateFormat.format(new Date(doc.updatedAt))}</span>
         {doc.lastExportFormat ? <span className="chip">Last export {doc.lastExportFormat.toUpperCase()}</span> : null}
       </div>
@@ -180,7 +212,10 @@ export default function DocumentDetail() {
       </div>
 
       {notice ? (
-        <p className="mt-5 flex items-center gap-2 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-800" role="status">
+        <p
+          className="mt-5 flex items-center gap-2 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-800"
+          role="status"
+        >
           <span className="h-4 w-4 shrink-0 text-ink-950">{icons.check}</span>
           {notice}
         </p>
@@ -192,6 +227,31 @@ export default function DocumentDetail() {
           <p className="text-sm leading-relaxed text-ink-900">{error}</p>
         </div>
       ) : null}
+
+      {doc.kind === 'deck' ? (
+        <section className="mt-12">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg text-ink-950">Preview</h2>
+            <p className="text-xs text-ink-500">
+              Animated in the browser with GSAP. The exported file keeps the theme, not the motion.
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <SlidePreview slides={doc.slides} theme={activeTheme} />
+          </div>
+        </section>
+      ) : null}
+
+      <section className="mt-12">
+        <ThemePicker
+          themes={themes}
+          value={doc.theme}
+          onChange={handleThemeChange}
+          disabled={themeSaving}
+          label={themeSaving ? 'Theme (saving…)' : 'Theme'}
+        />
+      </section>
 
       {doc.kind === 'deck' ? (
         <section className="mt-12 space-y-4">
