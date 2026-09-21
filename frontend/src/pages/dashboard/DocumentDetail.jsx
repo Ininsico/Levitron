@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import PresenterMode from '../../components/PresenterMode.jsx'
 import SlidePreview from '../../components/SlidePreview.jsx'
 import ThemePicker from '../../components/ThemePicker.jsx'
+import { SectionListEditor, SlideListEditor } from '../../components/OutlineEditor.jsx'
 import { icons } from '../../components/icons.jsx'
 import {
   deleteDocument,
@@ -19,9 +21,14 @@ export default function DocumentDetail() {
   const navigate = useNavigate()
 
   const [doc, setDoc] = useState(null)
+  const [slides, setSlides] = useState([])
+  const [sections, setSections] = useState([])
   const [formats, setFormats] = useState([])
   const [themes, setThemes] = useState([])
   const [title, setTitle] = useState('')
+  const [presenting, setPresenting] = useState(false)
+  const [startAt, setStartAt] = useState(0)
+
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -40,6 +47,8 @@ export default function DocumentDetail() {
       .then(([loaded, capabilities]) => {
         if (!active) return
         setDoc(loaded)
+        setSlides(loaded.slides ?? [])
+        setSections(loaded.sections ?? [])
         setTitle(loaded.title)
         setFormats(capabilities.formats[loaded.kind] ?? [])
         setThemes(capabilities.themes ?? [])
@@ -55,6 +64,57 @@ export default function DocumentDetail() {
       active = false
     }
   }, [id])
+
+  const dirty = useMemo(() => {
+    if (!doc) return false
+
+    return doc.kind === 'deck'
+      ? JSON.stringify(slides) !== JSON.stringify(doc.slides)
+      : JSON.stringify(sections) !== JSON.stringify(doc.sections)
+  }, [doc, slides, sections])
+
+  // Losing edits to a stray refresh would be worse than the browser prompt.
+  useEffect(() => {
+    if (!dirty) return undefined
+
+    function onBeforeUnload(event) {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [dirty])
+
+  async function handleSave() {
+    if (!doc || !dirty) return
+
+    setSaving(true)
+    setError('')
+    setNotice('')
+
+    try {
+      const updated = await updateDocument(id, doc.kind === 'deck' ? { slides } : { sections })
+      setDoc(updated)
+      setSlides(updated.slides ?? [])
+      setSections(updated.sections ?? [])
+      setNotice('Changes saved.')
+    } catch (saveError) {
+      setError(saveError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function handleRevert() {
+    if (!doc) return
+
+    setSlides(doc.slides ?? [])
+    setSections(doc.sections ?? [])
+    setTitle(doc.title)
+    setNotice('Reverted to the saved version.')
+    setError('')
+  }
 
   async function handleTitleSave(event) {
     event.preventDefault()
@@ -99,11 +159,17 @@ export default function DocumentDetail() {
     setNotice('')
 
     try {
+      if (dirty) await handleSave()
+
       const filename = await exportDocument({ id, format })
       setNotice(`Downloaded ${filename}`)
 
       const refreshed = await getDocument(id).catch(() => null)
-      if (refreshed) setDoc(refreshed)
+      if (refreshed) {
+        setDoc(refreshed)
+        setSlides(refreshed.slides ?? [])
+        setSections(refreshed.sections ?? [])
+      }
     } catch (exportError) {
       setError(exportError.message)
     } finally {
@@ -148,6 +214,16 @@ export default function DocumentDetail() {
 
   return (
     <>
+      {presenting ? (
+        <PresenterMode
+          slides={slides}
+          theme={activeTheme}
+          title={doc.title}
+          startIndex={startAt}
+          onClose={() => setPresenting(false)}
+        />
+      ) : null}
+
       <nav className="text-sm text-ink-500">
         <Link to="/app" className="transition-colors hover:text-ink-950">
           Dashboard
@@ -164,51 +240,74 @@ export default function DocumentDetail() {
           aria-label="Document title"
         />
         <button type="submit" className="btn btn-outline" disabled={saving || title.trim() === doc.title}>
-          {saving ? 'Saving…' : 'Save title'}
+          Save title
         </button>
       </form>
 
       <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">
-          {doc.kind === 'deck' ? `${doc.slides.length} slides` : `${doc.sections.length} sections`}
+          {doc.kind === 'deck' ? `${slides.length} slides` : `${sections.length} sections`}
         </span>
         {activeTheme ? (
           <span className="chip">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `#${activeTheme.accent}` }} />
-            {activeTheme.name} theme
+            {activeTheme.name}
           </span>
         ) : null}
         <span className="chip">
           <span className="h-1.5 w-1.5 rounded-full bg-ink-950" />
-          {doc.source === 'ai' ? `AI · ${doc.model}` : 'Built-in draft engine'}
+          {doc.source === 'ai' ? `AI · ${doc.model}` : 'Built-in engine'}
         </span>
         {doc.hasInput ? <span className="chip">From your content</span> : null}
         <span className="chip">Updated {dateFormat.format(new Date(doc.updatedAt))}</span>
-        {doc.lastExportFormat ? <span className="chip">Last export {doc.lastExportFormat.toUpperCase()}</span> : null}
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        {formats.map((format) => (
-          <button
-            key={format.name}
-            type="button"
-            className="btn btn-primary"
-            onClick={() => handleExport(format.name)}
-            disabled={Boolean(exporting)}
-          >
-            <span className="h-4 w-4">{icons.download}</span>
-            {exporting === format.name ? `Building ${format.label}…` : `Export ${format.label}`}
-          </button>
-        ))}
-
-        <button
-          type="button"
-          className="btn btn-ghost ml-auto text-ink-500 hover:text-ink-950"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          {deleting ? 'Deleting…' : 'Delete'}
+      {/* Sticky so Save is always reachable, however long the outline is. */}
+      <div className="sticky top-16 z-30 -mx-5 mt-6 flex flex-wrap items-center gap-3 border-y border-ink-950/10 bg-cream-100/95 px-5 py-3 backdrop-blur-xl sm:-mx-8 sm:px-8 lg:top-0">
+        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!dirty || saving}>
+          {saving ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
         </button>
+
+        <button type="button" className="btn btn-ghost" onClick={handleRevert} disabled={!dirty || saving}>
+          Revert
+        </button>
+
+        {dirty ? (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-ink-700">
+            <span className="h-2 w-2 rounded-full bg-ink-950" />
+            Unsaved changes
+          </span>
+        ) : null}
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {doc.kind === 'deck' ? (
+            <button type="button" className="btn btn-outline" onClick={() => setPresenting(true)} disabled={!slides.length}>
+              Present
+            </button>
+          ) : null}
+
+          {formats.map((format) => (
+            <button
+              key={format.name}
+              type="button"
+              className="btn btn-outline"
+              onClick={() => handleExport(format.name)}
+              disabled={Boolean(exporting)}
+            >
+              <span className="h-4 w-4">{icons.download}</span>
+              {exporting === format.name ? 'Building…' : format.label}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            className="btn btn-ghost text-ink-500 hover:text-ink-950"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : 'Delete'}
+          </button>
+        </div>
       </div>
 
       {notice ? (
@@ -233,12 +332,19 @@ export default function DocumentDetail() {
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg text-ink-950">Preview</h2>
             <p className="text-xs text-ink-500">
-              Animated in the browser with GSAP. The exported file keeps the theme, not the motion.
+              GSAP-animated in the browser. Exported files keep the theme, not the motion.
             </p>
           </div>
 
           <div className="mt-4">
-            <SlidePreview slides={doc.slides} theme={activeTheme} />
+            <SlidePreview
+              slides={slides}
+              theme={activeTheme}
+              onPresent={(index) => {
+                setStartAt(index ?? 0)
+                setPresenting(true)
+              }}
+            />
           </div>
         </section>
       ) : null}
@@ -253,57 +359,20 @@ export default function DocumentDetail() {
         />
       </section>
 
-      {doc.kind === 'deck' ? (
-        <section className="mt-12 space-y-4">
-          <h2 className="text-lg text-ink-950">Outline</h2>
+      <section className="mt-12">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg text-ink-950">{doc.kind === 'deck' ? 'Edit slides' : 'Edit sections'}</h2>
+          <p className="text-xs text-ink-500">Changes stay local until you press Save changes.</p>
+        </div>
 
-          {doc.slides.map((slide, index) => (
-            <article key={`${slide.heading}-${index}`} className="card p-6">
-              <div className="flex items-baseline gap-4">
-                <span className="font-mono text-xs tabular-nums text-ink-400">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <h3 className="font-display text-lg text-ink-950">{slide.heading}</h3>
-              </div>
-
-              {slide.bullets.length ? (
-                <ul className="mt-4 space-y-2 pl-9">
-                  {slide.bullets.map((bullet) => (
-                    <li key={bullet} className="flex gap-2.5 text-sm leading-relaxed text-ink-700">
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-ink-400" />
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              {slide.notes ? (
-                <p className="mt-4 border-l-2 border-ink-950/15 pl-4 text-xs italic leading-relaxed text-ink-500">
-                  {slide.notes}
-                </p>
-              ) : null}
-            </article>
-          ))}
-        </section>
-      ) : (
-        <section className="mt-12 space-y-4">
-          <h2 className="text-lg text-ink-950">Contents</h2>
-
-          {doc.sections.map((section) => (
-            <article key={section.heading} className="card p-6">
-              <h3 className="font-display text-lg text-ink-950">{section.heading}</h3>
-
-              <div className="mt-3 space-y-3">
-                {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-sm leading-relaxed text-ink-700">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </article>
-          ))}
-        </section>
-      )}
+        <div className="mt-4">
+          {doc.kind === 'deck' ? (
+            <SlideListEditor slides={slides} onChange={setSlides} />
+          ) : (
+            <SectionListEditor sections={sections} onChange={setSections} />
+          )}
+        </div>
+      </section>
     </>
   )
 }

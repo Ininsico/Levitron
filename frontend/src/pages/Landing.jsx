@@ -10,10 +10,10 @@ import Stats from '../components/Stats.jsx'
 import { useReveal } from '../hooks/useReveal.js'
 
 export default function Landing() {
-  useReveal()
+  const scope = useReveal()
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-paper">
+    <div ref={scope} className="relative min-h-screen overflow-x-clip bg-paper">
       <Navbar />
 
       <main>

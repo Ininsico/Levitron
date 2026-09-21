@@ -28,11 +28,13 @@ real Office or PDF file.
 | Dashboard (home, create, document view)        | Built and tested  |
 | Draft from a brief, or from your own content   | Built and tested  |
 | 10 themes, applied to preview and export       | Built and tested  |
+| **In-app editing** (headings, bullets, notes, reorder) | Built and tested |
+| **Presenter mode** — full screen, keyboard, progress | Built       |
+| GSAP scroll animations + animated preview      | Built             |
 | PPTX / DOCX / PDF export                       | Built and tested  |
-| GSAP-animated slide preview                    | Built             |
 | Waitlist, health, stats API                    | Built and tested  |
 | Design system (`main.css`)                     | Built             |
-| **Editing slides in place, image generation, CLI** | **Not built yet** |
+| **Image generation, native PPTX animation, CLI** | **Not built yet** |
 
 Generation uses your configured model when there is one. With no model configured it uses the
 built-in draft engine, and the UI says so on the result — nothing pretends a model wrote something
@@ -67,8 +69,12 @@ Levitron/
 │       ├── components/
 │       │   ├── Navbar.jsx  Hero.jsx  Features.jsx  HowItWorks.jsx
 │       │   ├── Stats.jsx  OpenSource.jsx  Faq.jsx  CallToAction.jsx  Footer.jsx
-│       │   ├── SlidePreview.jsx  GSAP-animated deck player
-│       │   ├── ThemePicker.jsx   theme swatches
+│       │   ├── SlideCanvas.jsx     one themed slide, shared everywhere
+│       │   ├── SlidePreview.jsx    animated preview + thumbnail rail
+│       │   ├── PresenterMode.jsx   full-screen slideshow
+│       │   ├── OutlineEditor.jsx   edit headings, bullets, notes, order
+│       │   ├── GeneratingPanel.jsx animated "working on it" state
+│       │   ├── ThemePicker.jsx     theme swatches
 │       │   ├── Logo.jsx          the wordmark
 │       │   ├── icons.jsx         maps semantic names → Lucide components
 │       │   ├── RequireAuth.jsx   route guard
@@ -76,8 +82,9 @@ Levitron/
 │       │   └── SectionHeading.jsx
 │       ├── context/AuthContext.jsx
 │       ├── hooks/
-│       │   ├── useReveal.js       IntersectionObserver scroll reveals (landing)
-│       │   └── useGsapReveal.js   GSAP stagger for dashboard lists
+│       │   ├── useReveal.js         GSAP ScrollTrigger reveals (landing)
+│       │   ├── useGsapReveal.js     ScrollTrigger stagger for dashboard lists
+│       │   └── useSlideAnimation.js the slide build timeline, shared
 │       ├── data/content.js       every string on the landing page
 │       └── lib/
 │           ├── api.js            fetch wrapper, injects the bearer token
@@ -383,17 +390,35 @@ names and resolve them on the viewer's machine.
 
 ## Animation, and where it stops
 
-`SlidePreview.jsx` is a GSAP timeline: the accent bar wipes in, the heading rises, bullets stagger
-up behind it. Arrow keys move between slides, and Play auto-advances. `useGsapReveal.js` staggers
-dashboard lists once their data has actually loaded — it runs in `useLayoutEffect` so nothing
-flashes at full opacity first, and both honour `prefers-reduced-motion`.
+GSAP 3 is used in three places, all through shared hooks so the motion stays consistent:
+
+| Hook / component | What it does |
+| ---------------- | ------------ |
+| `useReveal.js` | **ScrollTrigger** reveals every `.reveal` on the landing page as it scrolls into view |
+| `useGsapReveal.js` | **ScrollTrigger** stagger for dashboard lists, keyed on the loaded row count |
+| `useSlideAnimation.js` | The slide build timeline — accent bar, heading, staggered bullets — shared by the preview and presenter |
+| `PresenterMode.jsx` | Full-screen slideshow: ← → Space Home End to move, Esc to exit, a full-screen toggle, progress bar, speaker notes |
+
+The slide **build** animation reads the theme: the accent bar and bullets use the theme's accent
+colour, so the motion matches the deck.
+
+**Two design rules, because content that silently stays invisible is worse than no animation:**
+
+1. **Nothing is hidden in CSS.** The start state is applied by GSAP inside `useLayoutEffect`, so if
+   GSAP fails to load the content is simply visible. There is no `opacity: 0` class waiting for
+   JavaScript.
+2. **Every tween is an explicit `fromTo` ending at the natural CSS value, with `once: true`.** A
+   reveal cannot run in reverse and strand an element off-screen, and an interrupted timeline falls
+   back to visible rather than stuck at zero.
+
+All of them bail out entirely under `prefers-reduced-motion: reduce`.
 
 **GSAP cannot be exported into a `.pptx`.** GSAP is browser JavaScript; PPTX is a static Office
 format. `pptxgenjs` has no transition or animation API — its type definitions contain no
 `transition`, `animation` or `entrance` at all (checked, not assumed), and no library converts GSAP
 timelines into PowerPoint's native animation XML. So:
 
-- **In the app** — fully animated, GSAP-driven preview
+- **In the app** — fully animated preview, presenter mode and scroll reveals
 - **In the export** — the theme (colours, fonts, layout, speaker notes) carries across; the motion does not
 
 Native PowerPoint animation would mean writing DrawingML timing XML into the slide parts by hand —
@@ -409,9 +434,15 @@ a separate, much larger feature, and not something the current exporter does.
 | `/login`               | `Login`           | Sign in / create account — the target of "Start building"       |
 | `/app`                 | `DashboardLayout` | Wrapped in `RequireAuth`; sidebar shell for everything below    |
 | `/app` (index)         | `DashboardHome`   | Counts and your recent documents                                |
-| `/app/new`             | `NewDocument`     | Pick a type, describe it, generate                              |
-| `/app/documents/:id`   | `DocumentDetail`  | Review the outline, rename, export, delete                      |
+| `/app/new`             | `NewDocument`     | Pick a type, brief or paste content, choose a theme, generate    |
+| `/app/documents/:id`   | `DocumentDetail`  | Preview, present, **edit and save**, restyle, export, delete     |
 | `*`                    | —                 | Redirects to `/`                                                |
+
+**Editing.** The document page holds a local working copy of the outline. Edits stay local until
+you press **Save changes** — a sticky bar keeps Save, Revert, Present and Export reachable however
+long the outline gets, it shows an "Unsaved changes" marker, reverts cleanly, and warns before a
+reload discards work. Saving is a single `PATCH`; exporting with unsaved edits saves first, so a
+download never silently lags behind the screen.
 
 **Data flow.** `lib/api.js` is the only module that calls `fetch`. It reads the bearer token from
 `lib/session.js` and throws an `Error` carrying `status`, so callers can distinguish a 401 (session
@@ -486,13 +517,15 @@ in one place. They fill their wrapper via `h-full w-full` and inherit colour fro
 
 - [x] Landing page and design system
 - [x] Account system: register, login, JWT sessions, protected route
-- [x] Dashboard: workspace, create, review, export
+- [x] Dashboard: workspace, create, document view
 - [x] Draft from a brief, or structure your own pasted content
 - [x] 10 themes, applied to both the preview and the exported file
-- [x] GSAP-animated slide preview with keyboard navigation
+- [x] Edit headings, bullets, speaker notes, order and content in the app, then save
+- [x] Presenter mode with keyboard control and progress
+- [x] GSAP scroll animations, animated preview and an animated generating state
 - [x] PPTX, DOCX and PDF export
 - [x] Waitlist, health and stats API
-- [ ] Editing slides in place (today a document is renamed, restyled and exported)
+- [ ] Undo/redo history in the editor
 - [ ] Regenerating a single slide or section
 - [ ] Native PowerPoint transitions in the exported deck (hand-written DrawingML timing)
 - [ ] Images and vector charts inside exports

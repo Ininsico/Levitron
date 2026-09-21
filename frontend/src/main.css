@@ -324,27 +324,10 @@
     color: transparent;
   }
 
-  .reveal {
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-      opacity 0.75s var(--ease-out-expo),
-      transform 0.75s var(--ease-out-expo);
-    transition-delay: var(--reveal-delay, 0ms);
-  }
-
-  .reveal.is-visible {
-    opacity: 1;
-    transform: none;
-  }
+  /* `.reveal` is a marker only — GSAP applies the start and end states, so
+     content can never be stranded invisible by a failed animation. */
 
   @media (prefers-reduced-motion: reduce) {
-    .reveal {
-      opacity: 1;
-      transform: none;
-      transition: none;
-    }
-
     .animate-drift,
     .animate-ember {
       animation: none;

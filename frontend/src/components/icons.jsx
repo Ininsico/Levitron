@@ -2,6 +2,8 @@ import {
   ArrowRight,
   ChartColumn,
   Check,
+  ChevronDown,
+  ChevronUp,
   CircleAlert,
   Download,
   Eye,
@@ -15,6 +17,7 @@ import {
   Sparkles,
   Star,
   Terminal,
+  Trash,
   X,
 } from 'lucide-react'
 
@@ -42,4 +45,7 @@ export const icons = {
   alert: <CircleAlert {...iconProps} />,
   eye: <Eye {...iconProps} />,
   eyeOff: <EyeOff {...iconProps} />,
+  chevronUp: <ChevronUp {...iconProps} />,
+  chevronDown: <ChevronDown {...iconProps} />,
+  trash: <Trash {...iconProps} />,
 }

@@ -1,37 +1,50 @@
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 /**
- * Staggers `selector` in when `trigger` changes. useLayoutEffect so GSAP sets
- * the start state before the browser paints — with useEffect the elements flash
- * at full opacity for a frame first.
+ * Scroll + mount reveals for anything marked `[data-reveal]` inside the
+ * returned scope. Re-runs when `trigger` changes, which is how async lists get
+ * animated once their rows exist rather than on an empty container.
  *
- * `trigger` is what makes this work with async data: pass the loaded count so
- * the animation runs once the rows actually exist.
+ * As with useReveal: the hidden state comes from GSAP here, never from CSS, so
+ * a failure leaves content visible.
  */
-export function useGsapReveal(trigger, selector = '[data-reveal]') {
+export function useGsapReveal(trigger) {
   const scope = useRef(null)
 
   useLayoutEffect(() => {
-    if (!scope.current) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!scope.current) return undefined
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
 
-    const targets = scope.current.querySelectorAll(selector)
-    if (!targets.length) return
+    const targets = Array.from(scope.current.querySelectorAll('[data-reveal]'))
+    if (!targets.length) return undefined
 
     const context = gsap.context(() => {
-      gsap.from(targets, {
-        y: 18,
-        opacity: 0,
-        duration: 0.5,
-        stagger: 0.06,
-        ease: 'power2.out',
-        clearProps: 'transform,opacity',
+      targets.forEach((element, index) => {
+        gsap.set(element, { opacity: 0, y: 20 })
+
+        gsap.to(element, {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          delay: Math.min(index, 8) * 0.05,
+          ease: 'power2.out',
+          clearProps: 'transform,opacity',
+          scrollTrigger: { trigger: element, start: 'top 92%', once: true },
+        })
       })
     }, scope)
 
-    return () => context.revert()
-  }, [trigger, selector])
+    const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 200)
+
+    return () => {
+      window.clearTimeout(refresh)
+      context.revert()
+    }
+  }, [trigger])
 
   return scope
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
+import GeneratingPanel from '../../components/GeneratingPanel.jsx'
 import ThemePicker from '../../components/ThemePicker.jsx'
 import { icons } from '../../components/icons.jsx'
 import { createDocument, getCapabilities } from '../../lib/api.js'
@@ -78,6 +79,31 @@ export default function NewDocument() {
       setError(submitError.message)
       setStatus('idle')
     }
+  }
+
+  const selectedTheme = themes.find((entry) => entry.id === theme)
+
+  if (status === 'loading') {
+    return (
+      <>
+        <nav className="text-sm text-ink-500">
+          <Link to="/app" className="transition-colors hover:text-ink-950">
+            Dashboard
+          </Link>
+          <span className="px-2">/</span>
+          <span className="text-ink-900">Generating</span>
+        </nav>
+
+        <h1 className="mt-4 text-3xl text-ink-950">Working on it</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          {kind === 'deck' ? 'Building your slide outline.' : 'Building your document outline.'}
+        </p>
+
+        <div className="mt-10">
+          <GeneratingPanel theme={selectedTheme} kind={kind} />
+        </div>
+      </>
+    )
   }
 
   return (
@@ -286,9 +312,9 @@ export default function NewDocument() {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'loading'}>
-            {status === 'loading' ? 'Drafting…' : 'Generate draft'}
-            {status === 'loading' ? null : <span className="h-4 w-4">{icons.arrow}</span>}
+          <button type="submit" className="btn btn-primary btn-lg">
+            Generate draft
+            <span className="h-4 w-4">{icons.arrow}</span>
           </button>
           <Link to="/app" className="btn btn-ghost">
             Cancel
