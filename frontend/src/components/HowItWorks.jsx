@@ -19,13 +19,13 @@ export default function HowItWorks() {
           {steps.map((item, index) => (
             <article key={item.step} className="reveal relative" style={{ '--reveal-delay': `${index * 120}ms` }}>
               <div className="flex items-center gap-4">
-                <span className="relative z-10 flex h-18 w-18 shrink-0 items-center justify-center rounded-3xl border border-lava-500/20 bg-cream-50 font-display text-xl text-lava-600 shadow-soft">
+                <span className="relative z-10 flex h-18 w-18 shrink-0 items-center justify-center rounded-3xl border border-ink-950/12 bg-cream-50 font-display text-xl text-ink-950 shadow-soft">
                   {item.step}
                 </span>
               </div>
 
-              <h3 className="mt-6 text-xl text-ash-950">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-ash-600">{item.body}</p>
+              <h3 className="mt-6 text-xl text-ink-950">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-ink-600">{item.body}</p>
             </article>
           ))}
         </div>

@@ -275,21 +275,25 @@ Because the app uses the History API, a production host must rewrite unknown pat
 ## Design system
 
 The entire visual language lives in one file: **`frontend/src/main.css`**. Cream-paper surfaces,
-bright volcanic red accent.
+black ink — monochrome on purpose, so contrast carries the design instead of a colour accent.
 
 | Token               | Value     | Used for                |
 | ------------------- | --------- | ----------------------- |
 | `--color-cream-50`  | `#fffdf8` | page background (paper) |
-| `--color-cream-100` | `#fdf7ec` | soft section background |
-| `--color-lava-500`  | `#ff3b21` | primary accent, buttons |
-| `--color-lava-700`  | `#c51a05` | accent text on cream    |
-| `--color-ash-950`   | `#17110f` | headings and body ink   |
+| `--color-cream-100` | `#fbf6ec` | soft section background |
+| `--color-ink-950`   | `#000000` | buttons, headings, ink  |
+| `--color-ink-600`   | `#555555` | body copy               |
+| `--color-ink-400`   | `#909090` | muted labels            |
 
 Each token is defined once in Tailwind's `@theme` block, which means every one of them is *also* a
-utility: `bg-lava-500`, `text-ash-600`, `border-cream-300`. On top of that the file defines the
-reusable `.btn` (`-primary`, `-outline`, `-ghost`, `-dark`, `-lg`), `.card`, `.chip`, `.field`,
-`.eyebrow`, `.hairline`, `.grid-lines`, `.shell` and `.noise` classes, the `drift`/`ember`
+utility: `bg-ink-950`, `text-ink-600`, `border-cream-300`. On top of that the file defines the
+reusable `.btn` (`-primary`, `-light`, `-outline`, `-ghost`, `-lg`, `-block`), `.card`, `.chip`,
+`.field`, `.eyebrow`, `.hairline`, `.grid-lines` and `.shell` classes, the `drift`/`ember`
 animations, and the `.reveal` scroll-in transition (which honours `prefers-reduced-motion`).
+
+`.btn-primary` is black on cream. `.btn-light` is its inverse, for the two dark panels (open source
+and the waitlist form). Form fields are rounded rectangles rather than pills, so they read as fields
+instead of search boxes.
 
 **Type.** `Plus Jakarta Sans` for everything, `JetBrains Mono` for code. Self-hosted via Google
 Fonts in `index.html`.

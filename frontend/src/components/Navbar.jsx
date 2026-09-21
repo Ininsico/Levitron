@@ -29,14 +29,14 @@ export default function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        scrolled ? 'border-b border-ash-950/8 bg-cream-50/80 backdrop-blur-xl' : 'border-b border-transparent'
+        scrolled ? 'border-b border-ink-950/8 bg-cream-50/80 backdrop-blur-xl' : 'border-b border-transparent'
       }`}
     >
       <div className="shell flex h-18 items-center justify-between gap-6">
         <a href="#top" className="flex items-center gap-3" onClick={() => setOpen(false)}>
           <Logo className="h-9 w-9" />
-          <span className="font-display text-lg font-semibold tracking-tight text-ash-950">Levitron</span>
-          <span className="hidden rounded-full border border-ash-950/10 bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-ash-500 sm:inline">
+          <span className="font-display text-lg font-semibold tracking-tight text-ink-950">Levitron</span>
+          <span className="hidden rounded-full border border-ink-950/10 bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-ink-500 sm:inline">
             v0.1
           </span>
         </a>
@@ -46,7 +46,7 @@ export default function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-ash-600 transition-colors hover:bg-cream-200 hover:text-lava-700"
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-cream-200 hover:text-ink-950"
             >
               {link.label}
             </a>
@@ -76,14 +76,14 @@ export default function Navbar() {
       </div>
 
       {open ? (
-        <div className="border-t border-ash-950/8 bg-cream-50/95 backdrop-blur-xl lg:hidden">
+        <div className="border-t border-ink-950/8 bg-cream-50/95 backdrop-blur-xl lg:hidden">
           <nav className="shell flex flex-col gap-1 py-5">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-2xl px-4 py-3 text-base font-medium text-ash-700 transition-colors hover:bg-cream-200 hover:text-lava-700"
+                className="rounded-2xl px-4 py-3 text-base font-medium text-ink-700 transition-colors hover:bg-cream-200 hover:text-ink-950"
               >
                 {link.label}
               </a>

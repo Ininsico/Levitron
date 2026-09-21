@@ -36,7 +36,7 @@ export const features = [
   {
     icon: 'terminal',
     title: 'API, CLI and CI',
-    body: 'Generate decks from a build step: levitron build talk.yaml --out talk.pdf --theme lava. Ship docs that never go stale.',
+    body: 'Generate decks from a build step: levitron build talk.yaml --out talk.pdf --theme mono. Ship docs that never go stale.',
   },
 ]
 

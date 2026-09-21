@@ -12,7 +12,7 @@ export default function Features() {
           body="Levitron handles the part that eats your evening — structure, layout and export — so you can spend the time on the argument you are actually making."
         />
 
-        <div className="card reveal mt-14 overflow-hidden bg-ash-950/12">
+        <div className="card reveal mt-14 overflow-hidden bg-ink-950/12">
           <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <article
@@ -20,16 +20,16 @@ export default function Features() {
                 className="group flex flex-col bg-cream-50 p-8 transition-colors duration-300 hover:bg-white"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-lava-500/20 bg-lava-50 text-lava-600 transition-colors duration-300 group-hover:border-lava-500 group-hover:bg-lava-500 group-hover:text-cream-50">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-950/12 bg-cream-200 text-ink-900 transition-colors duration-300 group-hover:border-ink-950 group-hover:bg-ink-950 group-hover:text-cream-50">
                     <span className="h-5 w-5">{icons[feature.icon]}</span>
                   </span>
-                  <span className="font-mono text-xs tabular-nums text-ash-300 transition-colors duration-300 group-hover:text-lava-500">
+                  <span className="font-mono text-xs tabular-nums text-ink-300 transition-colors duration-300 group-hover:text-ink-950">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                 </div>
 
-                <h3 className="mt-8 text-lg text-ash-950">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-ash-600">{feature.body}</p>
+                <h3 className="mt-8 text-lg text-ink-950">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-600">{feature.body}</p>
               </article>
             ))}
           </div>

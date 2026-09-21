@@ -2,6 +2,7 @@ import {
   ArrowRight,
   ChartColumn,
   Check,
+  CircleAlert,
   Download,
   Lock,
   Menu,
@@ -36,4 +37,5 @@ export const icons = {
   close: <X {...iconProps} />,
   lock: <Lock {...iconProps} />,
   star: <Star {...iconProps} />,
+  alert: <CircleAlert {...iconProps} />,
 }

@@ -5,17 +5,17 @@ export default function SectionHeading({ eyebrow, title, body, align = 'center',
     <div className={alignment}>
       {eyebrow ? (
         <span className="eyebrow reveal">
-          <span className="h-1.5 w-1.5 rounded-full bg-lava-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-ink-950" />
           {eyebrow}
         </span>
       ) : null}
 
-      <h2 className="reveal mt-5 text-3xl leading-[1.1] text-ash-950 sm:text-4xl md:text-5xl" style={{ '--reveal-delay': '80ms' }}>
+      <h2 className="reveal mt-5 text-3xl leading-[1.1] text-ink-950 sm:text-4xl md:text-5xl" style={{ '--reveal-delay': '80ms' }}>
         {title}
       </h2>
 
       {body ? (
-        <p className="reveal mt-5 text-base leading-relaxed text-ash-600 sm:text-lg" style={{ '--reveal-delay': '160ms' }}>
+        <p className="reveal mt-5 text-base leading-relaxed text-ink-600 sm:text-lg" style={{ '--reveal-delay': '160ms' }}>
           {body}
         </p>
       ) : null}
