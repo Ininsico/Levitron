@@ -44,7 +44,7 @@ export default function AppHome() {
       <header className="sticky top-0 z-40 border-b border-ink-950/8 bg-cream-50/80 backdrop-blur-xl">
         <div className="shell flex h-18 items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-3">
-            <Logo className="h-9 w-9" />
+            <Logo className="h-9 w-auto" />
             <span className="font-display text-lg font-semibold tracking-tight text-ink-950">Levitron</span>
           </Link>
 

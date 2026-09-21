@@ -303,7 +303,9 @@ Fonts in `index.html`.
 in one place. They fill their wrapper via `h-full w-full` and inherit colour from `currentColor`.
 
 > Note: Lucide v1 dropped brand logos, so there is no `Github` icon — the GitHub buttons use
-> `Star`. `Logo.jsx` stays hand-drawn because no icon library ships a Levitron logo.
+> `Star`. The Levitron mark itself is `frontend/public/logo.png`, rendered through
+> `src/components/Logo.jsx`; passing `tone="light"` puts it on a cream chip so it stays visible on
+> the dark panels.
 
 **Repo link.** The GitHub URL is defined once in `src/config.js` and derived from there everywhere
 (navbar, open-source section, footer's Issues / Pull requests / Releases links).

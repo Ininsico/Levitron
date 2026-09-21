@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid gap-12 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <a href="#top" className="flex items-center gap-3">
-              <Logo className="h-9 w-9" />
+              <Logo className="h-9 w-auto" />
               <span className="font-display text-lg font-semibold text-ink-950">Levitron</span>
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-600">

@@ -65,7 +65,7 @@ export default function Login() {
         </div>
 
         <Link to="/" className="relative flex items-center gap-3">
-          <Logo className="h-10 w-10" tone="light" />
+          <Logo className="h-10 w-auto" tone="light" />
           <span className="font-display text-xl font-semibold tracking-tight text-cream-50">Levitron</span>
         </Link>
 
@@ -92,7 +92,7 @@ export default function Login() {
       <main className="flex w-full flex-col justify-center px-6 py-14 sm:px-10 lg:w-1/2 lg:px-16">
         <div className="mx-auto w-full max-w-sm">
           <Link to="/" className="mb-12 flex items-center gap-3 lg:hidden">
-            <Logo className="h-9 w-9" />
+            <Logo className="h-9 w-auto" />
             <span className="font-display text-lg font-semibold tracking-tight text-ink-950">Levitron</span>
           </Link>
 

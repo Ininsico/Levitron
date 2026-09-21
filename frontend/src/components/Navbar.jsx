@@ -34,7 +34,7 @@ export default function Navbar() {
     >
       <div className="shell flex h-18 items-center justify-between gap-6">
         <a href="#top" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <Logo className="h-9 w-9" />
+          <Logo className="h-9 w-auto" />
           <span className="font-display text-lg font-semibold tracking-tight text-ink-950">Levitron</span>
           <span className="hidden rounded-full border border-ink-950/10 bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-ink-500 sm:inline">
             v0.1
