@@ -7,6 +7,7 @@ const slideSchema = new mongoose.Schema(
     heading: { type: String, required: true, trim: true, maxlength: 200 },
     bullets: { type: [String], default: [] },
     notes: { type: String, default: '', maxlength: 2000 },
+    icon: { type: String, default: '', trim: true, maxlength: 40 },
   },
   { _id: false },
 );

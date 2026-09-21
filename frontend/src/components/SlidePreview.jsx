@@ -23,10 +23,8 @@ export default function SlidePreview({ slides, theme, onPresent }) {
     [total],
   )
 
-  // Back to the first slide whenever a different deck is loaded.
-  useEffect(() => {
-    setIndex(0)
-  }, [total, slides[0]?.heading])
+  // No reset effect: the parent keys this component by document id, so a
+  // different deck remounts it with index already at 0.
 
   useEffect(() => {
     if (!playing || total < 2) return undefined

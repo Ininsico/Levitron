@@ -1,5 +1,6 @@
 import PptxGenJS from 'pptxgenjs';
 
+import { iconDataUri, iconSvg, isKnownIcon } from '../icons.js';
 import { resolveTheme } from '../themes.js';
 
 export async function renderDeckPptx(document) {
@@ -12,13 +13,12 @@ export async function renderDeckPptx(document) {
   pptx.company = 'Levitron';
   pptx.title = document.title;
 
-  document.slides.forEach((slide, index) => {
+  for (const [index, slide] of document.slides.entries()) {
     const sheet = pptx.addSlide();
 
     sheet.background = { color: theme.background };
 
     if (index === 0) {
-      // Title slide: accent bar, title, subtitle, rule.
       sheet.addShape(pptx.ShapeType.rect, {
         x: 0.7,
         y: 1.75,
@@ -55,7 +55,7 @@ export async function renderDeckPptx(document) {
       sheet.addText(slide.heading, {
         x: 0.7,
         y: 0.45,
-        w: 8.6,
+        w: 7.4,
         h: 0.85,
         fontFace: theme.headFont,
         fontSize: 28,
@@ -104,10 +104,29 @@ export async function renderDeckPptx(document) {
       });
     }
 
+    // The slide's icon, embedded as SVG. PowerPoint has supported SVG since
+    // 2016; studios generate a fallback PNG automatically.
+    if (slide.icon && isKnownIcon(slide.icon)) {
+      try {
+        const svg = await iconSvg(slide.icon, theme.accent);
+
+        sheet.addImage({
+          data: iconDataUri(svg),
+          x: index === 0 ? 8.35 : 8.35,
+          y: 0.4,
+          w: 0.7,
+          h: 0.7,
+        });
+      } catch (error) {
+        // A missing icon must never fail an export.
+        console.warn(`[pptx] could not embed icon "${slide.icon}": ${error.message}`);
+      }
+    }
+
     if (slide.notes) {
       sheet.addNotes(slide.notes);
     }
-  });
+  }
 
   return pptx.write({ outputType: 'nodebuffer' });
 }

@@ -18,6 +18,13 @@ const dateFormat = new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyl
 
 export default function DocumentDetail() {
   const { id } = useParams()
+
+  // Keyed on the id so opening a different document remounts with fresh state,
+  // rather than resetting half a dozen pieces of state inside an effect.
+  return <DocumentWorkspace key={id} id={id} />
+}
+
+function DocumentWorkspace({ id }) {
   const navigate = useNavigate()
 
   const [doc, setDoc] = useState(null)
@@ -39,9 +46,6 @@ export default function DocumentDetail() {
 
   useEffect(() => {
     let active = true
-
-    setStatus('loading')
-    setError('')
 
     Promise.all([getDocument(id), getCapabilities()])
       .then(([loaded, capabilities]) => {
@@ -329,15 +333,11 @@ export default function DocumentDetail() {
 
       {doc.kind === 'deck' ? (
         <section className="mt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg text-ink-950">Preview</h2>
-            <p className="text-xs text-ink-500">
-              GSAP-animated in the browser. Exported files keep the theme, not the motion.
-            </p>
-          </div>
+          <h2 className="text-lg text-ink-950">Preview</h2>
 
           <div className="mt-4">
             <SlidePreview
+              key={doc.id}
               slides={slides}
               theme={activeTheme}
               onPresent={(index) => {

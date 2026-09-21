@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import Logo from './Logo.jsx'
 import { icons } from './icons.jsx'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 import { REPO_URL } from '../config.js'
 import { navLinks } from '../data/content.js'
 

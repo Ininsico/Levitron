@@ -13,35 +13,49 @@
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Cream — warm paper */
-  --color-cream-50: #fffdf8;
-  --color-cream-100: #fbf6ec;
-  --color-cream-200: #f4ecdc;
-  --color-cream-300: #e9dcc5;
-  --color-cream-400: #d9c7a6;
-  --color-cream-500: #c4ad86;
+  /* Light scale — white through to blue-grey. Carried under the `cream` token
+     name for now; the values are the ones that matter. */
+  --color-cream-50: #ffffff;
+  --color-cream-100: #f5f8fc;
+  --color-cream-200: #e8eef7;
+  --color-cream-300: #d3ddec;
+  --color-cream-400: #b3c3da;
+  --color-cream-500: #8ea3c2;
 
-  /* Ink — neutral black through to light grey. The only accent there is. */
-  --color-ink-50: #f7f7f7;
-  --color-ink-100: #ebebeb;
-  --color-ink-200: #d4d4d4;
-  --color-ink-300: #b4b4b4;
-  --color-ink-400: #909090;
-  --color-ink-500: #6f6f6f;
-  --color-ink-600: #555555;
-  --color-ink-700: #3d3d3d;
-  --color-ink-800: #262626;
-  --color-ink-900: #141414;
-  --color-ink-950: #000000;
+  /* Blue — the accent */
+  --color-blue-50: #eef4ff;
+  --color-blue-100: #dbe7ff;
+  --color-blue-200: #bdd3ff;
+  --color-blue-300: #90b4ff;
+  --color-blue-400: #5b8cff;
+  --color-blue-500: #2563eb;
+  --color-blue-600: #1d4ed8;
+  --color-blue-700: #1a3fb0;
+  --color-blue-800: #16368c;
+  --color-blue-900: #12295f;
+  --color-blue-950: #0a1733;
+
+  /* Ink — black through to grey */
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d7dbe3;
+  --color-ink-300: #b4bac6;
+  --color-ink-400: #8b93a3;
+  --color-ink-500: #646d7e;
+  --color-ink-600: #4b5362;
+  --color-ink-700: #363d49;
+  --color-ink-800: #232932;
+  --color-ink-900: #131820;
+  --color-ink-950: #05070d;
 
   /* Semantic aliases */
-  --color-paper: #fffdf8;
-  --color-ink: #000000;
-  --color-brand: #000000;
+  --color-paper: #ffffff;
+  --color-ink: #05070d;
+  --color-brand: #2563eb;
 
-  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 30px -14px rgb(0 0 0 / 0.14);
-  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 20px 45px -28px rgb(0 0 0 / 0.32);
-  --shadow-ink: 0 14px 34px -18px rgb(0 0 0 / 0.5);
+  --shadow-soft: 0 1px 2px rgb(5 7 13 / 0.04), 0 10px 30px -14px rgb(5 7 13 / 0.14);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 20px 45px -28px rgb(5 7 13 / 0.3);
+  --shadow-ink: 0 14px 34px -18px rgb(37 99 235 / 0.55);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -103,12 +117,12 @@
   }
 
   ::selection {
-    background-color: var(--color-ink-950);
-    color: var(--color-cream-50);
+    background-color: var(--color-blue-600);
+    color: #ffffff;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-ink-950);
+    outline: 2px solid var(--color-blue-500);
     outline-offset: 3px;
     border-radius: 4px;
   }
@@ -129,7 +143,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-ink-400);
+    background: var(--color-blue-400);
   }
 }
 
@@ -177,39 +191,40 @@
     transform: none;
   }
 
-  /* Black on cream — the primary action. */
+  /* Blue on white — the primary action. */
   .btn-primary {
-    background-color: var(--color-ink-950);
-    color: var(--color-cream-50);
+    background-image: linear-gradient(180deg, var(--color-blue-500), var(--color-blue-700));
+    color: #ffffff;
     box-shadow: var(--shadow-ink);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background-color: var(--color-ink-800);
+    background-image: linear-gradient(180deg, var(--color-blue-400), var(--color-blue-600));
     transform: translateY(-2px);
-    box-shadow: 0 20px 40px -18px rgb(0 0 0 / 0.55);
+    box-shadow: 0 20px 40px -18px rgb(37 99 235 / 0.6);
   }
 
-  /* Cream on black — the inverse, for dark panels. */
+  /* White on blue — the inverse, for dark panels. */
   .btn-light {
-    background-color: var(--color-cream-50);
+    background-color: #ffffff;
     color: var(--color-ink-950);
   }
 
   .btn-light:hover:not(:disabled) {
-    background-color: var(--color-cream-200);
+    background-color: var(--color-blue-50);
     transform: translateY(-2px);
   }
 
   .btn-outline {
-    background-color: rgb(255 255 255 / 0.7);
-    border: 1px solid rgb(0 0 0 / 0.14);
+    background-color: rgb(255 255 255 / 0.8);
+    border: 1px solid rgb(5 7 13 / 0.14);
     color: var(--color-ink-900);
     backdrop-filter: blur(8px);
   }
 
   .btn-outline:hover:not(:disabled) {
-    border-color: var(--color-ink-950);
+    border-color: var(--color-blue-500);
+    color: var(--color-blue-700);
     transform: translateY(-2px);
   }
 
@@ -219,7 +234,7 @@
 
   .btn-ghost:hover:not(:disabled) {
     background-color: var(--color-cream-200);
-    color: var(--color-ink-950);
+    color: var(--color-blue-700);
   }
 
   .btn-lg {
@@ -246,9 +261,9 @@
     gap: 0.5rem;
     padding: 0.4rem 0.85rem;
     border-radius: 999px;
-    border: 1px solid rgb(0 0 0 / 0.12);
-    background-color: var(--color-cream-200);
-    color: var(--color-ink-800);
+    border: 1px solid rgb(37 99 235 / 0.22);
+    background-color: var(--color-blue-50);
+    color: var(--color-blue-700);
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -289,8 +304,8 @@
 
   .field:focus {
     outline: none;
-    border-color: var(--color-ink-950);
-    box-shadow: 0 0 0 3px rgb(0 0 0 / 0.08);
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.15);
   }
 
   .hairline {
@@ -318,7 +333,7 @@
 
 @layer utilities {
   .text-gradient {
-    background-image: linear-gradient(100deg, #000 0%, #262626 55%, #6f6f6f 100%);
+    background-image: linear-gradient(100deg, #05070d 0%, #1d4ed8 48%, #5b8cff 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

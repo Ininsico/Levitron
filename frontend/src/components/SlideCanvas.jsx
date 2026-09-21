@@ -1,3 +1,5 @@
+import SlideIcon from './SlideIcon.jsx'
+
 /**
  * One slide, rendered from a theme. Used by the inline preview, presenter mode
  * and the generating skeleton, so all three always agree on what a slide looks
@@ -18,11 +20,19 @@ export default function SlideCanvas({ slide, theme, index = 0, total = 1, classN
       style={{ backgroundColor: `#${theme.background}` }}
     >
       <div className="absolute inset-0 flex flex-col justify-center px-7 py-6 sm:px-12 sm:py-10">
-        <span
-          data-anim="bar"
-          className="block h-1 w-12 rounded-full"
-          style={{ backgroundColor: `#${theme.accent}` }}
-        />
+        <div className="flex items-center justify-between gap-4">
+          <span
+            data-anim="bar"
+            className="block h-1 w-12 rounded-full"
+            style={{ backgroundColor: `#${theme.accent}` }}
+          />
+
+          {slide.icon ? (
+            <span data-anim="bar" style={{ color: `#${theme.accent}` }}>
+              <SlideIcon name={slide.icon} className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.5} />
+            </span>
+          ) : null}
+        </div>
 
         <h3
           data-anim="heading"

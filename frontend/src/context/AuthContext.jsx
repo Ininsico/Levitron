@@ -1,9 +1,8 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
+import { AuthContext } from './authContext.js'
 import { getCurrentUser, loginAccount, registerAccount } from '../lib/api.js'
 import { clearSession, readSession, writeSession } from '../lib/session.js'
-
-const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => readSession())
@@ -55,14 +54,4 @@ export function AuthProvider({ children }) {
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-
-  if (!context) {
-    throw new Error('useAuth must be used inside an <AuthProvider>.')
-  }
-
-  return context
 }

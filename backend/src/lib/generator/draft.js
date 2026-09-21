@@ -2,6 +2,28 @@ import { contentTitle, structureDeckFromContent, structureDocumentFromContent } 
 
 const MAX_TOPIC_IN_HEADING = 58;
 
+// Offline drafts still get icons, so the exported deck looks deliberate even
+// with no model configured.
+const DRAFT_ICONS = [
+  'presentation',
+  'target',
+  'search',
+  'lightbulb',
+  'workflow',
+  'bar-chart-3',
+  'shield-check',
+  'trending-up',
+  'dollar-sign',
+  'route',
+  'scale',
+  'flag',
+  'rocket',
+];
+
+function withIcons(slides) {
+  return slides.map((slide, index) => ({ ...slide, icon: DRAFT_ICONS[index % DRAFT_ICONS.length] }));
+}
+
 function phrase(topic) {
   const cleaned = String(topic).replace(/\s+/g, ' ').trim().replace(/[.!?]+$/, '');
 
@@ -189,7 +211,7 @@ export function generateDraft({
         title: contentTitle(content, topic),
         source: 'draft',
         model: '',
-        slides: structureDeckFromContent(content, { maxSlides }),
+        slides: withIcons(structureDeckFromContent(content, { maxSlides })),
         sections: [],
       };
     }
@@ -216,11 +238,13 @@ export function generateDraft({
       chosen.push(middle[index % middle.length]);
     }
 
-    const slides = [...opening, ...chosen, ...closing].map((slide) => ({
-      heading: slide.heading,
-      bullets: slide.bullets ?? [],
-      notes: slide.notes ?? '',
-    }));
+    const slides = withIcons(
+      [...opening, ...chosen, ...closing].map((slide) => ({
+        heading: slide.heading,
+        bullets: slide.bullets ?? [],
+        notes: slide.notes ?? '',
+      })),
+    );
 
     return { title, source: 'draft', model: '', slides, sections: [] };
   }

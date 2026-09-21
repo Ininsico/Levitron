@@ -1,3 +1,7 @@
+import { useState } from 'react'
+
+import SlideIcon from './SlideIcon.jsx'
+import { SLIDE_ICON_NAMES } from './slideIcons.js'
 import { icons } from './icons.jsx'
 
 function move(list, from, to) {
@@ -8,6 +12,91 @@ function move(list, from, to) {
   next.splice(to, 0, item)
 
   return next
+}
+
+/** Searchable picker over the same curated Lucide set the model draws from. */
+function IconPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const matches = SLIDE_ICON_NAMES.filter((name) => name.includes(query.trim().toLowerCase()))
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-label="Choose slide icon"
+        aria-expanded={open}
+        title={value ? `Icon: ${value}` : 'Choose slide icon'}
+        className={`flex h-8 items-center gap-1.5 rounded-lg border px-2 transition-colors ${
+          value ? 'border-ink-950/20 text-ink-900' : 'border-ink-950/12 text-ink-500 hover:border-ink-950/40'
+        }`}
+      >
+        {value ? <SlideIcon name={value} className="h-4 w-4" /> : <span className="text-xs">Icon</span>}
+      </button>
+
+      {open ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close icon picker"
+            className="fixed inset-0 z-10 cursor-default"
+            onClick={() => setOpen(false)}
+          />
+
+          <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-ink-950/12 bg-cream-50 p-3 shadow-card">
+            <input
+              className="field py-2 text-sm"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={`Search ${SLIDE_ICON_NAMES.length} icons`}
+              aria-label="Search icons"
+            />
+
+            <div className="mt-3 grid max-h-56 grid-cols-6 gap-1 overflow-y-auto">
+              {matches.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  title={name}
+                  onClick={() => {
+                    onChange(name)
+                    setOpen(false)
+                    setQuery('')
+                  }}
+                  className={`flex h-9 items-center justify-center rounded-lg border transition-colors ${
+                    name === value
+                      ? 'border-ink-950 bg-ink-950 text-cream-50'
+                      : 'border-transparent text-ink-700 hover:border-ink-950/20 hover:bg-cream-200'
+                  }`}
+                >
+                  <SlideIcon name={name} className="h-4 w-4" />
+                </button>
+              ))}
+
+              {matches.length === 0 ? (
+                <p className="col-span-6 py-4 text-center text-xs text-ink-500">No icon matches that.</p>
+              ) : null}
+            </div>
+
+            {value ? (
+              <button
+                type="button"
+                className="mt-3 text-xs font-medium text-ink-600 transition-colors hover:text-ink-950"
+                onClick={() => {
+                  onChange('')
+                  setOpen(false)
+                }}
+              >
+                Remove icon
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+    </div>
+  )
 }
 
 function IconButton({ label, onClick, children, disabled = false, danger = false }) {
@@ -59,6 +148,8 @@ export function SlideListEditor({ slides, onChange }) {
             />
 
             <div className="mt-1 flex gap-1.5">
+              <IconPicker value={slide.icon} onChange={(icon) => updateSlide(index, { icon })} />
+
               <IconButton label="Move up" onClick={() => onChange(move(slides, index, index - 1))} disabled={index === 0}>
                 {icons.chevronUp}
               </IconButton>

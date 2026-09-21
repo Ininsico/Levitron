@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 import { formatsFor, isSupported, renderExport } from '../lib/exporters/index.js';
 import { generateOutline, generatorStatus } from '../lib/generator/index.js';
+import { SLIDE_ICONS, normalizeIcon } from '../lib/icons.js';
 import { DEFAULT_THEME_ID, isKnownTheme, listThemes } from '../lib/themes.js';
 import { Document } from '../models/Document.js';
 import { requireAuth } from '../middleware/requireAuth.js';
@@ -43,6 +44,7 @@ documentsRouter.get('/capabilities', (req, res) => {
     data: {
       generator: generatorStatus(),
       themes: listThemes(),
+      icons: SLIDE_ICONS,
       defaultTheme: DEFAULT_THEME_ID,
       limits: { maxContentLength: MAX_CONTENT_LENGTH, maxSlides: MAX_SLIDES, maxTopicLength: MAX_TOPIC_LENGTH },
       formats: {
@@ -159,6 +161,7 @@ documentsRouter.patch('/:id', async (req, res) => {
           .filter(Boolean)
           .slice(0, 8),
         notes: typeof slide?.notes === 'string' ? slide.notes.trim().slice(0, 2000) : '',
+        icon: normalizeIcon(slide?.icon),
       }))
       .filter((slide) => slide.heading);
   }

@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import Logo from '../components/Logo.jsx'
 import { icons } from '../components/icons.jsx'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 
 const highlights = [
   'Prompt, document or repo in — a designed deck out',
