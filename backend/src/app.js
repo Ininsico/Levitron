@@ -12,8 +12,14 @@ export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(cors({ origin: allowedOrigins }));
-  app.use(express.json({ limit: '32kb' }));
+  app.use(
+    cors({
+      origin: allowedOrigins,
+      // The browser needs to read this to name the downloaded file.
+      exposedHeaders: ['Content-Disposition'],
+    }),
+  );
+  app.use(express.json({ limit: '256kb' }));
 
   app.use('/api', apiRouter);
 

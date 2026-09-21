@@ -73,3 +73,81 @@ export function loginAccount({ email, password }) {
 export function getCurrentUser() {
   return request('/auth/me').then((payload) => payload.data.user)
 }
+
+export function getCapabilities() {
+  return request('/documents/capabilities').then((payload) => payload.data)
+}
+
+export function listDocuments() {
+  return request('/documents').then((payload) => payload.data)
+}
+
+export function getDocument(id) {
+  return request(`/documents/${id}`).then((payload) => payload.data)
+}
+
+export function createDocument(input) {
+  return request('/documents', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }).then((payload) => payload.data)
+}
+
+export function updateDocument(id, patch) {
+  return request(`/documents/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  }).then((payload) => payload.data)
+}
+
+export function deleteDocument(id) {
+  return request(`/documents/${id}`, { method: 'DELETE' }).then((payload) => payload.data)
+}
+
+/**
+ * Renders a document server-side and hands the bytes to the browser as a
+ * download. Kept apart from request() because the response is a file.
+ */
+export async function exportDocument({ id, format }) {
+  const session = readSession()
+
+  const response = await fetch(`${API_BASE}/documents/${id}/export`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
+    },
+    body: JSON.stringify({ format }),
+  }).catch(() => null)
+
+  if (!response) {
+    const error = new Error(UNREACHABLE)
+    error.status = 0
+
+    throw error
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    const error = new Error(payload?.error ?? fallbackMessage(response.status))
+    error.status = response.status
+
+    throw error
+  }
+
+  const blob = await response.blob()
+  const disposition = response.headers.get('content-disposition') ?? ''
+  const filename = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? `levitron-export.${format}`
+
+  const url = URL.createObjectURL(blob)
+  const link = window.document.createElement('a')
+
+  link.href = url
+  link.download = filename
+  window.document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+
+  return filename
+}
