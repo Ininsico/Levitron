@@ -230,7 +230,11 @@ export async function generateWithAi(input) {
     body: JSON.stringify({
       model: aiModelName(),
       temperature: 0.7,
-      response_format: { type: 'json_object' },
+      // No response_format here on purpose. Providers implement JSON mode
+      // differently — Groq validates the output against a schema inferred from
+      // the prompt and rejects the request outright when it cannot infer one,
+      // which is exactly what a prose description of the fields causes. The
+      // prompt asks for JSON and extractJson() handles the result.
       messages: [
         { role: 'system', content: systemPrompt(input.kind) },
         { role: 'user', content: userPrompt(input) },
@@ -252,7 +256,7 @@ export async function generateWithAi(input) {
     throw new Error('the model returned an empty response');
   }
 
-  return input.kind === 'deck'
-    ? normalizeDeck(JSON.parse(content), input)
-    : normalizeDocument(JSON.parse(content), input);
+  const parsed = extractJson(content);
+
+  return input.kind === 'deck' ? normalizeDeck(parsed, input) : normalizeDocument(parsed, input);
 }
