@@ -6,6 +6,7 @@ import SlidePreview from '../../components/SlidePreview.jsx'
 import ThemePicker from '../../components/ThemePicker.jsx'
 import { SectionListEditor, SlideListEditor } from '../../components/OutlineEditor.jsx'
 import { icons } from '../../components/icons.jsx'
+import { useGsapReveal } from '../../hooks/useGsapReveal.js'
 import {
   deleteDocument,
   exportDocument,
@@ -43,6 +44,10 @@ function DocumentWorkspace({ id }) {
   const [themeSaving, setThemeSaving] = useState(false)
   const [exporting, setExporting] = useState('')
   const [deleting, setDeleting] = useState(false)
+
+  // ScrollTrigger reveals for the page sections. Keyed on the loaded document
+  // rather than the sliders, so editing a slide never re-hides a section.
+  const scope = useGsapReveal(status === 'ready' ? `ready:${doc?.id ?? ''}` : 'loading', 'section, h1')
 
   useEffect(() => {
     let active = true
@@ -217,7 +222,7 @@ function DocumentWorkspace({ id }) {
   const activeTheme = themes.find((theme) => theme.id === doc.theme)
 
   return (
-    <>
+    <div ref={scope}>
       {presenting ? (
         <PresenterMode
           slides={slides}
@@ -389,6 +394,6 @@ function DocumentWorkspace({ id }) {
           )}
         </div>
       </section>
-    </>
+    </div>
   )
 }

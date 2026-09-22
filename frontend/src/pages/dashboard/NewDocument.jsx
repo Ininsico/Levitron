@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import GeneratingPanel from '../../components/GeneratingPanel.jsx'
 import ThemePicker from '../../components/ThemePicker.jsx'
 import { icons } from '../../components/icons.jsx'
+import { useGsapReveal } from '../../hooks/useGsapReveal.js'
 import { createDocument, getCapabilities } from '../../lib/api.js'
 
 const KINDS = [
@@ -38,6 +39,11 @@ export default function NewDocument() {
   const [maxContent, setMaxContent] = useState(20000)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+
+  // ScrollTrigger reveals for the page's sections and heading. The trigger only
+  // changes when the page has loaded, so editing a field never re-hides
+  // anything mid-typing.
+  const scope = useGsapReveal(themes.length ? 'ready' : 'loading', 'section, .form-section, h1')
 
   useEffect(() => {
     let active = true
@@ -114,12 +120,13 @@ export default function NewDocument() {
         <span className="text-ink-900">New</span>
       </nav>
 
-      <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl">What do you need?</h1>
-      <p className="mt-3 max-w-2xl text-base text-ink-600">
-        Describe the outcome, or paste material you already have and let Levitron structure it.
-      </p>
+      <div ref={scope} className="mt-4">
+        <h1 className="text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl">What do you need?</h1>
+        <p className="mt-3 max-w-2xl text-base text-ink-600">
+          Describe the outcome, or paste material you already have and let Levitron structure it.
+        </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 grid gap-6 xl:grid-cols-2 xl:items-start">
+        <form onSubmit={handleSubmit} className="mt-8 grid gap-6 xl:grid-cols-2 xl:items-start">
         <fieldset className="form-section">
           <legend className="section-label mb-5">1 — Type</legend>
 
@@ -307,7 +314,8 @@ export default function NewDocument() {
             Cancel
           </Link>
         </div>
-      </form>
+        </form>
+      </div>
     </>
   )
 }
