@@ -43,6 +43,7 @@ const documentSchema = new mongoose.Schema(
     // about whether an AI model actually wrote it.
     source: { type: String, enum: ['ai', 'draft'], default: 'draft' },
     model: { type: String, default: '' },
+    fallbackReason: { type: String, default: '', maxlength: 500 },
 
     slides: { type: [slideSchema], default: [] },
     sections: { type: [sectionSchema], default: [] },
@@ -67,6 +68,7 @@ documentSchema.methods.toPublicJSON = function toPublicJSON() {
     theme: this.theme,
     source: this.source,
     model: this.model,
+    fallbackReason: this.fallbackReason,
     slides: this.slides,
     sections: this.sections,
     lastExportedAt: this.lastExportedAt,

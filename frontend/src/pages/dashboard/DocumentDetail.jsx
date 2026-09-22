@@ -314,6 +314,22 @@ function DocumentWorkspace({ id }) {
         </div>
       </div>
 
+      {doc.source === 'draft' ? (
+        <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-500/40 bg-amber-50 px-4 py-3" role="alert">
+          <span className="mt-0.5 h-4 w-4 shrink-0 text-amber-700">{icons.alert}</span>
+          <div className="text-sm leading-relaxed text-amber-900">
+            <p className="font-medium">This outline came from the built-in engine, not a model.</p>
+            <p className="mt-1">
+              {doc.fallbackReason
+                ? `The model call failed: ${doc.fallbackReason}`
+                : 'No model is connected to this server.'}{' '}
+              Because the built-in engine fills a fixed template, every deck it produces follows the
+              same structure.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       {notice ? (
         <p
           className="mt-5 flex items-center gap-2 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-800"

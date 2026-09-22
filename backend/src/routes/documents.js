@@ -106,6 +106,7 @@ documentsRouter.post('/', async (req, res) => {
     theme,
     source: outline.source,
     model: outline.model,
+    fallbackReason: outline.fallbackReason ?? '',
     slides: outline.slides,
     sections: outline.sections,
   });
