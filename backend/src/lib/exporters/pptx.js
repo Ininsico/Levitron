@@ -4,7 +4,7 @@ import { iconDataUri, iconSvg, isKnownIcon } from '../icons.js';
 import { resolveTheme } from '../themes.js';
 
 export async function renderDeckPptx(document) {
-  const theme = resolveTheme(document.theme);
+  const theme = resolveTheme(document.theme, document.customTheme);
 
   const pptx = new PptxGenJS();
 

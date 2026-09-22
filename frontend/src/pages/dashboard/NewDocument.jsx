@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import GeneratingPanel from '../../components/GeneratingPanel.jsx'
-import ThemePicker from '../../components/ThemePicker.jsx'
+import ThemeDropdown from '../../components/ThemeDropdown.jsx'
 import { icons } from '../../components/icons.jsx'
 import { useGsapReveal } from '../../hooks/useGsapReveal.js'
 import { createDocument, getCapabilities } from '../../lib/api.js'
@@ -33,6 +33,7 @@ export default function NewDocument() {
   const [tone, setTone] = useState('')
   const [slideCount, setSlideCount] = useState(10)
   const [theme, setTheme] = useState('mono')
+  const [custom, setCustom] = useState({ background: '', ink: '', accent: '' })
   const [themes, setThemes] = useState([])
   const [maxContent, setMaxContent] = useState(20000)
   const [status, setStatus] = useState('idle')
@@ -73,6 +74,7 @@ export default function NewDocument() {
         audience,
         tone,
         theme,
+        customTheme: custom,
         slideCount: Number(slideCount),
       })
 
@@ -129,7 +131,13 @@ export default function NewDocument() {
           </div>
 
           <div className="w-full max-w-lg xl:w-auto">
-            <ThemePicker themes={themes} value={theme} onChange={setTheme} label="Theme" />
+            <ThemeDropdown
+              themes={themes}
+              value={theme}
+              custom={custom}
+              onChange={setTheme}
+              onCustomChange={setCustom}
+            />
           </div>
         </div>
 

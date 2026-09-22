@@ -175,7 +175,64 @@ export function listThemes() {
   return THEMES;
 }
 
-export function resolveTheme(id) {
+const HEX = /^[0-9a-f]{6}$/i;
+
+function mix(from, to, amount) {
+  const channel = (offset) => {
+    const a = parseInt(from.slice(offset, offset + 2), 16);
+    const b = parseInt(to.slice(offset, offset + 2), 16);
+
+    return Math.round(a + (b - a) * amount)
+      .toString(16)
+      .padStart(2, '0');
+  };
+
+  return `${channel(0)}${channel(2)}${channel(4)}`;
+}
+
+function relativeLuminance(hex) {
+  const [r, g, b] = [0, 2, 4]
+    .map((offset) => parseInt(hex.slice(offset, offset + 2), 16) / 255)
+    .map((value) => (value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Builds a full theme from three colours. Everything else is derived so a
+ * custom theme can never be missing a field the renderers read — which is
+ * exactly how the built-in list once produced #undefined.
+ */
+export function buildCustomTheme({ background, ink, accent }, fallbackId = DEFAULT_THEME_ID) {
+  const base = resolveTheme(fallbackId);
+
+  const bg = HEX.test(background ?? '') ? background : base.background;
+  const fg = HEX.test(ink ?? '') ? ink : base.ink;
+  const ac = HEX.test(accent ?? '') ? accent : base.accent;
+
+  return {
+    id: 'custom',
+    name: 'Custom',
+    description: 'Your own colours',
+    background: bg,
+    // A barely-tinted panel, so the slide still has depth rather than being flat.
+    surface: mix(bg, fg, 0.06),
+    ink: fg,
+    body: mix(fg, bg, 0.12),
+    muted: mix(fg, bg, 0.45),
+    accent: ac,
+    accentInk: relativeLuminance(ac) > 0.5 ? '000000' : 'FFFFFF',
+    headFont: base.headFont,
+    bodyFont: base.bodyFont,
+    pdfFamily: base.pdfFamily,
+  };
+}
+
+export function resolveTheme(id, custom) {
+  if (custom && (custom.background || custom.ink || custom.accent)) {
+    return buildCustomTheme(custom, id);
+  }
+
   return THEMES.find((theme) => theme.id === id) ?? THEMES.find((theme) => theme.id === DEFAULT_THEME_ID);
 }
 

@@ -14,7 +14,7 @@ function hex(value) {
 }
 
 export function renderPdf(document) {
-  const theme = resolveTheme(document.theme);
+  const theme = resolveTheme(document.theme, document.customTheme);
   const fonts = BASE_FONTS[theme.pdfFamily] ?? BASE_FONTS.sans;
 
   return new Promise((resolve, reject) => {

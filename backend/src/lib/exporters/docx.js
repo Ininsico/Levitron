@@ -3,7 +3,7 @@ import { Document as DocxDocument, HeadingLevel, Packer, Paragraph, TextRun } fr
 import { resolveTheme } from '../themes.js';
 
 export async function renderDocx(document) {
-  const theme = resolveTheme(document.theme);
+  const theme = resolveTheme(document.theme, document.customTheme);
 
   const stamp = new Date().toISOString().slice(0, 10);
   const label = document.kind === 'deck' ? 'Presentation outline' : 'Document';

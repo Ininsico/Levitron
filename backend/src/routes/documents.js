@@ -23,6 +23,23 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+/** Only ever three 6-digit hex values, or nothing. */
+function sanitizeCustomTheme(value) {
+  if (!value || typeof value !== 'object') return {};
+
+  const hex = (candidate) => {
+    const raw = String(candidate ?? '').replace('#', '').toUpperCase();
+
+    return /^[0-9A-F]{6}$/.test(raw) ? raw : '';
+  };
+
+  return {
+    background: hex(value.background),
+    ink: hex(value.ink),
+    accent: hex(value.accent),
+  };
+}
+
 function summary(document) {
   return {
     id: document._id.toString(),
@@ -104,6 +121,7 @@ documentsRouter.post('/', async (req, res) => {
     audience,
     tone,
     theme,
+    customTheme: sanitizeCustomTheme(req.body?.customTheme),
     source: outline.source,
     model: outline.model,
     fallbackReason: outline.fallbackReason ?? '',
@@ -151,6 +169,10 @@ documentsRouter.patch('/:id', async (req, res) => {
 
   if (typeof req.body?.theme === 'string' && isKnownTheme(req.body.theme)) {
     document.theme = req.body.theme;
+  }
+
+  if (req.body?.customTheme && typeof req.body.customTheme === 'object') {
+    document.customTheme = sanitizeCustomTheme(req.body.customTheme);
   }
 
   if (Array.isArray(req.body?.slides) && document.kind === 'deck') {

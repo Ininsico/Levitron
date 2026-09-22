@@ -77,6 +77,20 @@ const documentSchema = new mongoose.Schema(
     tone: { type: String, default: '', trim: true, maxlength: 80 },
     theme: { type: String, default: DEFAULT_THEME_ID, trim: true },
 
+    // Three colours are enough to derive a complete theme; themes.js fills in
+    // surface, body, muted and accentInk so nothing can end up undefined.
+    customTheme: {
+      type: new mongoose.Schema(
+        {
+          background: { type: String, default: '', trim: true, maxlength: 6 },
+          ink: { type: String, default: '', trim: true, maxlength: 6 },
+          accent: { type: String, default: '', trim: true, maxlength: 6 },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
+
     // How the outline was produced, surfaced in the UI so nobody is misled
     // about whether an AI model actually wrote it.
     source: { type: String, enum: ['ai', 'draft'], default: 'draft' },
@@ -104,6 +118,7 @@ documentSchema.methods.toPublicJSON = function toPublicJSON() {
     audience: this.audience,
     tone: this.tone,
     theme: this.theme,
+    customTheme: this.customTheme,
     source: this.source,
     model: this.model,
     fallbackReason: this.fallbackReason,
