@@ -36,7 +36,6 @@ export default function NewDocument() {
   const [theme, setTheme] = useState('mono')
   const [themes, setThemes] = useState([])
   const [maxContent, setMaxContent] = useState(20000)
-  const [generator, setGenerator] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
 
@@ -46,7 +45,6 @@ export default function NewDocument() {
     getCapabilities()
       .then((data) => {
         if (!active) return
-        setGenerator(data.generator)
         setThemes(data.themes ?? [])
         setTheme(data.defaultTheme ?? 'mono')
         if (data.limits?.maxContentLength) setMaxContent(data.limits.maxContentLength)
@@ -292,22 +290,6 @@ export default function NewDocument() {
             </label>
           ) : null}
         </div>
-
-        {generator ? (
-          <p className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-600 xl:col-span-2">
-            <span className="mt-0.5 h-4 w-4 shrink-0 text-ink-500">{icons.spark}</span>
-            {generator.engine === 'ai' ? (
-              <span>
-                Drafting with <code className="font-mono text-ink-900">{generator.model}</code>.
-              </span>
-            ) : (
-              <span>
-                Using the built-in draft engine, which structures your brief or your own content. No
-                model is connected.
-              </span>
-            )}
-          </p>
-        ) : null}
 
         {error ? (
           <div className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 xl:col-span-2" role="alert">

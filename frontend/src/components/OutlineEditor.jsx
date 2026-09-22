@@ -219,7 +219,7 @@ export function SlideListEditor({ slides, onChange }) {
 
       <button
         type="button"
-        className="btn btn-outline w-full"
+        className="btn btn-outline w-full xl:col-span-2"
         onClick={() => onChange([...slides, { heading: 'New slide', bullets: [''], notes: '' }])}
       >
         + Add slide
