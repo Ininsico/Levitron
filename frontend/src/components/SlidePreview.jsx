@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import SlideCanvas from './SlideCanvas.jsx'
 import { icons } from './icons.jsx'
-import { useSlideAnimation } from '../hooks/useSlideAnimation.js'
+import { transitionFor, useSlideAnimation } from '../hooks/useSlideAnimation.js'
 
 const AUTOPLAY_MS = 6000
 
 export default function SlidePreview({ slides, theme, onPresent }) {
   const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const stageRef = useSlideAnimation([index, theme?.id])
+  const stageRef = useSlideAnimation([index, theme?.id], transitionFor(index))
   const railRef = useRef(null)
 
   const total = slides.length

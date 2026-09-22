@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import SlideCanvas from './SlideCanvas.jsx'
 import { icons } from './icons.jsx'
-import { useFadeOnChange, useSlideAnimation } from '../hooks/useSlideAnimation.js'
+import { transitionFor, useFadeOnChange, useSlideAnimation } from '../hooks/useSlideAnimation.js'
 
 export default function PresenterMode({ slides, theme, title, startIndex = 0, onClose }) {
   const [index, setIndex] = useState(startIndex)
@@ -10,7 +10,7 @@ export default function PresenterMode({ slides, theme, title, startIndex = 0, on
 
   const shellRef = useRef(null)
   const fadeRef = useRef(null)
-  const stageRef = useSlideAnimation([index])
+  const stageRef = useSlideAnimation([index], transitionFor(index))
 
   const total = slides.length
   const slide = slides[index]

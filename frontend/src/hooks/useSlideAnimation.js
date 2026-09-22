@@ -14,7 +14,58 @@ export function prefersReducedMotion() {
  * exactly what React StrictMode does on mount — the element falls back to being
  * visible rather than stuck at opacity 0.
  */
-export function useSlideAnimation(deps = []) {
+/**
+ * Distinct entrance styles, cycled per slide. One repeated fade-up is what made
+ * every transition feel identical; a deck should not move the same way eight
+ * times.
+ */
+const TRANSITION_STYLES = ['rise', 'push', 'zoom', 'dissolve']
+
+export function transitionFor(index) {
+  return TRANSITION_STYLES[index % TRANSITION_STYLES.length]
+}
+
+const BAR = '[data-anim="bar"]'
+const TEXT = '[data-anim="heading"], [data-anim="statement"]'
+const BULLETS = '[data-anim="bullet"]'
+const META = '[data-anim="meta"]'
+
+function buildTimeline(variant) {
+  const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } })
+  const barFrom = { scaleX: 0, transformOrigin: 'left center' }
+
+  if (variant === 'push') {
+    // Everything enters from the right, like a slide being pushed on.
+    timeline
+      .fromTo(TEXT, { x: 70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6 })
+      .fromTo(BAR, barFrom, { scaleX: 1, duration: 0.5 }, '-=0.45')
+      .fromTo(BULLETS, { x: 48, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.07 }, '-=0.4')
+  } else if (variant === 'zoom') {
+    // Settles in from slightly small — reads as a focus pull.
+    timeline
+      .fromTo(TEXT, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6 })
+      .fromTo(BAR, barFrom, { scaleX: 1, duration: 0.5 }, '-=0.5')
+      .fromTo(BULLETS, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.07 }, '-=0.4')
+  } else if (variant === 'dissolve') {
+    // No travel at all, just a staggered fade — quiet, for a pause in the deck.
+    timeline.fromTo(
+      [BAR, TEXT, BULLETS],
+      { opacity: 0 },
+      { opacity: 1, duration: 0.8, stagger: 0.07 },
+    )
+  } else {
+    timeline
+      .fromTo(BAR, barFrom, { scaleX: 1, duration: 0.45 })
+      .fromTo(TEXT, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55 }, '-=0.2')
+      .fromTo(BULLETS, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.08 }, '-=0.32')
+  }
+
+  timeline.fromTo(META, { opacity: 0 }, { opacity: 1, duration: 0.4 }, '-=0.2')
+
+  return timeline
+}
+
+export function useSlideAnimation(deps = [], variant = 'rise') {
   const scope = useRef(null)
 
   useLayoutEffect(() => {
@@ -23,27 +74,7 @@ export function useSlideAnimation(deps = []) {
     if (prefersReducedMotion()) return undefined
 
     const context = gsap.context(() => {
-      const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-      timeline
-        .fromTo(
-          '[data-anim="bar"]',
-          { scaleX: 0, transformOrigin: 'left center' },
-          { scaleX: 1, duration: 0.45 },
-        )
-        .fromTo(
-          '[data-anim="heading"]',
-          { y: 26, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.55 },
-          '-=0.2',
-        )
-        .fromTo(
-          '[data-anim="bullet"]',
-          { y: 18, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.45, stagger: 0.08 },
-          '-=0.32',
-        )
-        .fromTo('[data-anim="meta"]', { opacity: 0 }, { opacity: 1, duration: 0.4 }, '-=0.2')
+      buildTimeline(variant)
     }, scope)
 
     return () => context.revert()
