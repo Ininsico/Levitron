@@ -10,16 +10,14 @@ import { createDocument, getCapabilities } from '../../lib/api.js'
 const KINDS = [
   {
     id: 'deck',
-    icon: 'chart',
     title: 'Presentation',
-    body: 'A slide outline with headings, bullets and speaker notes.',
+    body: 'A slide outline with varied layouts, icons and speaker notes. Exports to PowerPoint and PDF.',
     formats: 'PowerPoint · PDF',
   },
   {
     id: 'document',
-    icon: 'terminal',
     title: 'Document',
-    body: 'A written piece with sections and paragraphs.',
+    body: 'A written piece with sections and paragraphs. Exports to Word and PDF.',
     formats: 'Word · PDF',
   },
 ]
@@ -86,6 +84,7 @@ export default function NewDocument() {
   }
 
   const selectedTheme = themes.find((entry) => entry.id === theme)
+  const selectedKind = KINDS.find((entry) => entry.id === kind) ?? KINDS[0]
 
   if (status === 'loading') {
     return (
@@ -130,42 +129,25 @@ export default function NewDocument() {
         <fieldset className="form-section">
           <legend className="section-label mb-5">1 — Type</legend>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {KINDS.map((option) => {
-              const selected = kind === option.id
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-ink-900">What are you making?</span>
+            <select
+              className="field"
+              value={kind}
+              onChange={(event) => setKind(event.target.value)}
+              aria-describedby="kind-help"
+            >
+              {KINDS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.title} — {option.formats}
+                </option>
+              ))}
+            </select>
+          </label>
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setKind(option.id)}
-                  aria-pressed={selected}
-                  className={`rounded-2xl border p-5 text-left transition-colors ${
-                    selected
-                      ? 'border-ink-950 bg-cream-50 shadow-soft'
-                      : 'border-ink-950/12 bg-cream-50/60 hover:border-ink-950/30'
-                  }`}
-                >
-                  <span className="flex items-center justify-between">
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                        selected ? 'bg-ink-950 text-cream-50' : 'bg-cream-200 text-ink-700'
-                      }`}
-                    >
-                      <span className="h-4 w-4">{icons[option.icon]}</span>
-                    </span>
-                    {selected ? <span className="h-4 w-4 text-ink-950">{icons.check}</span> : null}
-                  </span>
-
-                  <span className="mt-4 block font-display text-lg font-bold text-ink-950">{option.title}</span>
-                  <span className="mt-1.5 block text-sm leading-relaxed text-ink-600">{option.body}</span>
-                  <span className="mt-3 block font-mono text-[11px] uppercase tracking-wider text-ink-400">
-                    {option.formats}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+          <p id="kind-help" className="mt-3 text-sm leading-relaxed text-ink-600">
+            {selectedKind.body}
+          </p>
         </fieldset>
 
         <fieldset className="form-section">
