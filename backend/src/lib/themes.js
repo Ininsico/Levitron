@@ -165,15 +165,14 @@ export const THEMES = [
 
 export const DEFAULT_THEME_ID = 'mono';
 
+/**
+ * The complete theme objects, deliberately. An earlier version returned only a
+ * few fields and the preview then rendered `#undefined` for body and muted —
+ * an invalid colour the browser drops, so the text inherited the app's dark
+ * ink and vanished against every dark theme.
+ */
 export function listThemes() {
-  return THEMES.map(({ id, name, description, background, ink, accent }) => ({
-    id,
-    name,
-    description,
-    background,
-    ink,
-    accent,
-  }));
+  return THEMES;
 }
 
 export function resolveTheme(id) {

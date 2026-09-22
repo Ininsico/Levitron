@@ -101,12 +101,8 @@ export default function GeneratingPanel({ theme, kind }) {
       </div>
 
       <div className="mt-4 h-1 overflow-hidden rounded-full bg-ink-950/10">
-        <span data-gen="sweep" className="block h-full w-1/4 rounded-full bg-ink-950" />
+        <span data-gen="sweep" className="block h-full w-1/4 rounded-full bg-blue-600" />
       </div>
-
-      <p className="mt-4 text-xs text-ink-500">
-        A model call usually takes a few seconds. The page stays here until it answers.
-      </p>
     </div>
   )
 }
