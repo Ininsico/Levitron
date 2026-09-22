@@ -17,8 +17,9 @@ function systemPrompt(kind) {
     return [
       'You are a presentation designer. You write decks that senior people actually pay attention to — not slide-shaped summaries of a topic.',
       '',
-      'Reply with JSON only, matching exactly this shape:',
-      '{"title": string, "slides": [{"heading": string, "layout": string, "bullets": string[], "statement": string, "metrics": [{"value": string, "label": string}], "comparison": {"leftTitle": string, "left": string[], "rightTitle": string, "right": string[]}, "notes": string, "icon": string}]}',
+      'Reply with ONE JSON object and nothing else — no prose, no markdown fence, no explanation.',
+      'Top-level keys: "title" (string) and "slides" (array of objects).',
+      'Each slide has: "heading" (string), "layout" (one of: title, bullets, statement, metrics, comparison), "bullets" (array of strings), "statement" (string — only for the statement layout), "metrics" (array of {"value": string, "label": string} — only for the metrics layout), "comparison" (object with "leftTitle", "left" (array of strings), "rightTitle", "right" (array of strings) — only for the comparison layout), "notes" (string), "icon" (string, chosen from the list at the end).',
       '',
       'Slide 1 is the title slide: the heading is the deck title, and it may carry at most two lines of framing as bullets.',
       '',
@@ -50,8 +51,9 @@ function systemPrompt(kind) {
   return [
     'You write internal business documents that a busy executive can act on.',
     '',
-    'Reply with JSON only, matching exactly this shape:',
-    '{"title": string, "sections": [{"heading": string, "paragraphs": string[]}]}',
+    'Reply with ONE JSON object and nothing else — no prose, no markdown fence.',
+    'Top-level keys: "title" (string) and "sections" (array of objects).',
+    'Each section has: "heading" (string) and "paragraphs" (array of strings).',
     '',
     'Rules:',
     '- 6 to 8 sections. Each has 2 to 3 paragraphs of one to three sentences.',
@@ -192,6 +194,28 @@ function normalizeDocument(parsed, { topic }) {
     slides: [],
     sections: cleaned,
   };
+}
+
+/**
+ * Models wrap JSON in a markdown fence or add a sentence around it often enough
+ * that trusting a bare JSON.parse is not worth it. This pulls out the object.
+ */
+function extractJson(text) {
+  const raw = String(text ?? '').trim();
+  const fenced = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+
+  try {
+    return JSON.parse(fenced);
+  } catch {
+    const start = fenced.indexOf('{');
+    const end = fenced.lastIndexOf('}');
+
+    if (start === -1 || end <= start) {
+      throw new Error('the model did not return JSON');
+    }
+
+    return JSON.parse(fenced.slice(start, end + 1));
+  }
 }
 
 export async function generateWithAi(input) {

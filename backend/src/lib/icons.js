@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url)
  * model on icons that mean something on a slide, and every name here was
  * checked against lucide-react 1.47.0 before being listed.
  */
+
 export const SLIDE_ICONS = [
   'activity',
   'archive',
