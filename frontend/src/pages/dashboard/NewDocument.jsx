@@ -41,7 +41,7 @@ export default function NewDocument() {
   // ScrollTrigger reveals for the page's sections and heading. The trigger only
   // changes when the page has loaded, so editing a field never re-hides
   // anything mid-typing.
-  const scope = useGsapReveal(themes.length ? 'ready' : 'loading', 'section, .form-section, h1')
+  const scope = useGsapReveal(themes.length ? 'ready' : 'loading', 'fieldset, h1')
 
   useEffect(() => {
     let active = true
@@ -120,15 +120,21 @@ export default function NewDocument() {
       </nav>
 
       <div ref={scope} className="mt-4">
-        <h1 className="text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl">What do you need?</h1>
-        <p className="mt-3 max-w-2xl text-base text-ink-600">
-          Describe the outcome, or paste material you already have and let Levitron structure it.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-8">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl">What do you need?</h1>
+            <p className="mt-3 max-w-2xl text-base text-ink-600">
+              Describe the outcome, or paste material you already have and let Levitron structure it.
+            </p>
+          </div>
+
+          <div className="w-full max-w-lg xl:w-auto">
+            <ThemePicker themes={themes} value={theme} onChange={setTheme} label="Theme" />
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-8 grid gap-6 xl:grid-cols-2 xl:items-start">
-        <fieldset className="form-section">
-          <legend className="section-label mb-5">1 — Type</legend>
-
+        <fieldset>
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-ink-900">What are you making?</span>
             <select
@@ -150,8 +156,8 @@ export default function NewDocument() {
           </p>
         </fieldset>
 
-        <fieldset className="form-section">
-          <legend className="section-label mb-5">2 — Starting point</legend>
+        <fieldset>
+          <p className="mb-4 text-sm font-semibold text-ink-900">How should it start?</p>
 
           <div className="inline-flex rounded-xl border border-ink-950/12 bg-cream-50 p-1">
             {[
@@ -232,12 +238,8 @@ export default function NewDocument() {
           )}
         </fieldset>
 
-        <div className="form-section">
-          <ThemePicker themes={themes} value={theme} onChange={setTheme} label="3 — Theme" />
-        </div>
-
-        <div className="form-section">
-          <p className="section-label mb-5">4 — Details</p>
+        <div>
+          <p className="mb-4 text-sm font-semibold text-ink-900">Anything else it should know?</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
