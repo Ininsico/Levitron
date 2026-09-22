@@ -3,7 +3,7 @@ export default function ThemePicker({ themes, value, onChange, disabled = false,
 
   return (
     <fieldset disabled={disabled}>
-      <legend className="mb-3 block text-sm font-medium text-ink-700">{label}</legend>
+      <legend className="section-label mb-4">{label}</legend>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {themes.map((theme) => {

@@ -116,14 +116,14 @@ export default function NewDocument() {
         <span className="text-ink-900">New</span>
       </nav>
 
-      <h1 className="mt-4 text-3xl text-ink-950">What do you need?</h1>
-      <p className="mt-2 text-sm text-ink-600">
+      <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl">What do you need?</h1>
+      <p className="mt-3 max-w-2xl text-base text-ink-600">
         Describe the outcome, or paste material you already have and let Levitron structure it.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-9 space-y-8">
-        <fieldset>
-          <legend className="mb-3 block text-sm font-medium text-ink-700">Type</legend>
+      <form onSubmit={handleSubmit} className="mt-9 space-y-6">
+        <fieldset className="form-section">
+          <legend className="section-label mb-5">1 — Type</legend>
 
           <div className="grid gap-4 sm:grid-cols-2">
             {KINDS.map((option) => {
@@ -152,7 +152,7 @@ export default function NewDocument() {
                     {selected ? <span className="h-4 w-4 text-ink-950">{icons.check}</span> : null}
                   </span>
 
-                  <span className="mt-4 block font-display text-base text-ink-950">{option.title}</span>
+                  <span className="mt-4 block font-display text-lg font-bold text-ink-950">{option.title}</span>
                   <span className="mt-1.5 block text-sm leading-relaxed text-ink-600">{option.body}</span>
                   <span className="mt-3 block font-mono text-[11px] uppercase tracking-wider text-ink-400">
                     {option.formats}
@@ -163,8 +163,8 @@ export default function NewDocument() {
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend className="mb-3 block text-sm font-medium text-ink-700">Starting point</legend>
+        <fieldset className="form-section">
+          <legend className="section-label mb-5">2 — Starting point</legend>
 
           <div className="inline-flex rounded-xl border border-ink-950/12 bg-cream-50 p-1">
             {[
@@ -245,47 +245,53 @@ export default function NewDocument() {
           )}
         </fieldset>
 
-        <ThemePicker themes={themes} value={theme} onChange={setTheme} />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-ink-700">
-              Audience <span className="font-normal text-ink-400">optional</span>
-            </span>
-            <input
-              className="field"
-              value={audience}
-              onChange={(event) => setAudience(event.target.value)}
-              placeholder="the board"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-ink-700">
-              Tone <span className="font-normal text-ink-400">optional</span>
-            </span>
-            <input
-              className="field"
-              value={tone}
-              onChange={(event) => setTone(event.target.value)}
-              placeholder="confident but calm"
-            />
-          </label>
+        <div className="form-section">
+          <ThemePicker themes={themes} value={theme} onChange={setTheme} label="3 — Theme" />
         </div>
 
-        {kind === 'deck' ? (
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-ink-700">Slides: {slideCount}</span>
-            <input
-              type="range"
-              min="4"
-              max="30"
-              value={slideCount}
-              onChange={(event) => setSlideCount(event.target.value)}
-              className="w-full accent-ink-950"
-            />
-          </label>
-        ) : null}
+        <div className="form-section">
+          <p className="section-label mb-5">4 — Details</p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-ink-900">
+                Audience <span className="font-normal text-ink-400">optional</span>
+              </span>
+              <input
+                className="field"
+                value={audience}
+                onChange={(event) => setAudience(event.target.value)}
+                placeholder="the board"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-ink-900">
+                Tone <span className="font-normal text-ink-400">optional</span>
+              </span>
+              <input
+                className="field"
+                value={tone}
+                onChange={(event) => setTone(event.target.value)}
+                placeholder="confident but calm"
+              />
+            </label>
+          </div>
+
+          {kind === 'deck' ? (
+            <label className="mt-5 block">
+              <span className="mb-2 block text-sm font-semibold text-ink-900">Slides: {slideCount}</span>
+              <input
+                type="range"
+                min="4"
+                max="30"
+                value={slideCount}
+                onChange={(event) => setSlideCount(event.target.value)}
+                className="w-full accent-blue-600"
+              />
+            </label>
+          ) : null}
+        </div>
 
         {generator ? (
           <p className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-600">

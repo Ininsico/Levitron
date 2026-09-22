@@ -107,8 +107,8 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.03em;
+    font-weight: 700;
+    letter-spacing: -0.035em;
     text-wrap: balance;
   }
 
@@ -253,6 +253,24 @@
     border: 1px solid rgb(0 0 0 / 0.08);
     background-color: var(--color-cream-50);
     box-shadow: var(--shadow-card);
+  }
+
+  .section-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-ink-500);
+  }
+
+  .form-section {
+    border-radius: 1.25rem;
+    border: 1px solid rgb(5 7 13 / 0.08);
+    background-color: #ffffff;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-soft);
   }
 
   .eyebrow {
