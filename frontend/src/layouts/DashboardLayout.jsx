@@ -156,7 +156,7 @@ export default function DashboardLayout() {
       ) : null}
 
       <main className={`transition-[padding] duration-300 ease-out ${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
-        <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-12">
+        <div className="mx-auto w-full max-w-7xl px-5 py-7 sm:px-8 sm:py-9">
           <Outlet />
         </div>
       </main>

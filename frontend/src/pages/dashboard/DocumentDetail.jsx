@@ -348,7 +348,7 @@ function DocumentWorkspace({ id }) {
       ) : null}
 
       {doc.kind === 'deck' ? (
-        <section className="mt-12">
+        <section className="mt-8">
           <h2 className="text-lg text-ink-950">Preview</h2>
 
           <div className="mt-4">

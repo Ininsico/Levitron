@@ -131,7 +131,7 @@ export function SlideListEditor({ slides, onChange }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
       {slides.map((slide, index) => (
         <article key={index} className="card p-5">
           <div className="flex items-start gap-3">

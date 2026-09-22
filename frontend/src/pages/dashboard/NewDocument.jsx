@@ -121,7 +121,7 @@ export default function NewDocument() {
         Describe the outcome, or paste material you already have and let Levitron structure it.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-9 space-y-6">
+      <form onSubmit={handleSubmit} className="mt-8 grid gap-6 xl:grid-cols-2 xl:items-start">
         <fieldset className="form-section">
           <legend className="section-label mb-5">1 — Type</legend>
 
@@ -294,7 +294,7 @@ export default function NewDocument() {
         </div>
 
         {generator ? (
-          <p className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-600">
+          <p className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 text-sm text-ink-600 xl:col-span-2">
             <span className="mt-0.5 h-4 w-4 shrink-0 text-ink-500">{icons.spark}</span>
             {generator.engine === 'ai' ? (
               <span>
@@ -310,13 +310,13 @@ export default function NewDocument() {
         ) : null}
 
         {error ? (
-          <div className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3" role="alert">
+          <div className="flex items-start gap-2.5 rounded-xl border border-ink-950/12 bg-cream-50 px-4 py-3 xl:col-span-2" role="alert">
             <span className="mt-0.5 h-4 w-4 shrink-0 text-ink-700">{icons.alert}</span>
             <p className="text-sm leading-relaxed text-ink-900">{error}</p>
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 xl:col-span-2">
           <button type="submit" className="btn btn-primary btn-lg">
             Generate draft
             <span className="h-4 w-4">{icons.arrow}</span>
