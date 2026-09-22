@@ -502,14 +502,21 @@ in one place. They fill their wrapper via `h-full w-full` and inherit colour fro
 
 ## npm scripts
 
-| Directory  | Command         | Does                                        |
-| ---------- | --------------- | ------------------------------------------- |
-| `backend`  | `npm run dev`   | `node --watch` with `.env` loaded           |
-| `backend`  | `npm start`     | Same, without file watching                 |
-| `frontend` | `npm run dev`   | Vite dev server on `:5173` with HMR          |
-| `frontend` | `npm run build` | Production build → `frontend/dist`          |
-| `frontend` | `npm run preview` | Serve the built output locally            |
-| `frontend` | `npm run lint`  | ESLint                                      |
+| Directory  | Command            | Does                                        |
+| ---------- | ------------------ | ------------------------------------------- |
+| `backend`  | `npm run dev`      | The API, with `.env` loaded                  |
+| `backend`  | `npm run dev:watch` | Same, plus `--watch`                        |
+| `backend`  | `npm start`        | Same as `dev`                                |
+| `frontend` | `npm run dev`      | Vite dev server on `:5173` with HMR          |
+| `frontend` | `npm run build`    | Production build → `frontend/dist`          |
+| `frontend` | `npm run preview`  | Serve the built output locally              |
+| `frontend` | `npm run lint`     | ESLint                                      |
+
+> `npm run dev` deliberately does **not** use `--watch`. Drafting holds the HTTP
+> request open for the whole model call, and `--watch` kills and restarts the
+> process on any file change — which drops an in-flight generation and shows up
+> in the browser as a 502. Use `dev:watch` if you want reloads and can live with
+> that.
 
 ---
 

@@ -16,6 +16,12 @@ export default defineConfig({
       '/api': {
         target: API_TARGET,
         changeOrigin: true,
+
+        // Drafting holds the connection open for the whole model call. The
+        // defaults would cut a slow generation short.
+        timeout: 180000,
+        proxyTimeout: 180000,
+
         // Dev-only. The technical detail goes to the terminal where a developer
         // can act on it; the response body stays neutral, because it can reach
         // the browser of someone who is not a developer.
@@ -24,11 +30,11 @@ export default defineConfig({
             const reason =
               error.code === 'ECONNREFUSED'
                 ? `nothing is listening on ${API_TARGET}`
-                : `the connection to ${API_TARGET} failed (${error.code ?? error.message})`
+                : error.code === 'ECONNRESET'
+                  ? `the API dropped the connection — if it runs under --watch, a file change restarts it mid-request`
+                  : `the connection to ${API_TARGET} failed (${error.code ?? error.message})`
 
-            console.error(
-              `[api proxy] ${req.method} ${req.url} — ${reason}. Start the API with "npm run dev" in backend/.`,
-            )
+            console.error(`[api proxy] ${req.method} ${req.url} — ${reason}.`)
 
             if (res.headersSent || typeof res.writeHead !== 'function') return
 
