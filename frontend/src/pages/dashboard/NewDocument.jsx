@@ -8,18 +8,8 @@ import { useGsapReveal } from '../../hooks/useGsapReveal.js'
 import { createDocument, getCapabilities } from '../../lib/api.js'
 
 const KINDS = [
-  {
-    id: 'deck',
-    title: 'Presentation',
-    body: 'A slide outline with varied layouts, icons and speaker notes. Exports to PowerPoint and PDF.',
-    formats: 'PowerPoint · PDF',
-  },
-  {
-    id: 'document',
-    title: 'Document',
-    body: 'A written piece with sections and paragraphs. Exports to Word and PDF.',
-    formats: 'Word · PDF',
-  },
+  { id: 'deck', title: 'Presentation' },
+  { id: 'document', title: 'Document' },
 ]
 
 export default function NewDocument() {
@@ -86,7 +76,6 @@ export default function NewDocument() {
   }
 
   const selectedTheme = themes.find((entry) => entry.id === theme)
-  const selectedKind = KINDS.find((entry) => entry.id === kind) ?? KINDS[0]
 
   if (status === 'loading') {
     return (
@@ -130,40 +119,35 @@ export default function NewDocument() {
             </p>
           </div>
 
-          <div className="w-full max-w-lg xl:w-auto">
-            <ThemeDropdown
-              themes={themes}
-              value={theme}
-              custom={custom}
-              onChange={setTheme}
-              onCustomChange={setCustom}
-            />
+          <div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
+            <label className="w-full sm:w-auto">
+              <span className="sr-only">What are you making?</span>
+              <select
+                className="field sm:w-52"
+                value={kind}
+                onChange={(event) => setKind(event.target.value)}
+              >
+                {KINDS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="w-full sm:w-auto">
+              <ThemeDropdown
+                themes={themes}
+                value={theme}
+                custom={custom}
+                onChange={setTheme}
+                onCustomChange={setCustom}
+              />
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 grid gap-6 xl:grid-cols-2 xl:items-start">
-        <fieldset>
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-ink-900">What are you making?</span>
-            <select
-              className="field"
-              value={kind}
-              onChange={(event) => setKind(event.target.value)}
-              aria-describedby="kind-help"
-            >
-              {KINDS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.title} — {option.formats}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <p id="kind-help" className="mt-3 text-sm leading-relaxed text-ink-600">
-            {selectedKind.body}
-          </p>
-        </fieldset>
-
         <fieldset>
           <p className="mb-4 text-sm font-semibold text-ink-900">How should it start?</p>
 
