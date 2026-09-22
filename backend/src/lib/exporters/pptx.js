@@ -72,7 +72,92 @@ export async function renderDeckPptx(document) {
         fill: { color: theme.accent },
       });
 
-      if (slide.bullets.length) {
+      const layout = index === 0 ? 'title' : (slide.layout ?? 'bullets');
+
+      // Background wash, approximating the preview's radial gradient.
+      sheet.addShape(pptx.ShapeType.rect, {
+        x: 0,
+        y: 0,
+        w: 5.6,
+        h: 5.63,
+        fill: { color: theme.surface, transparency: 55 },
+        line: { color: theme.background, width: 0 },
+      });
+
+      if (layout === 'statement' && (slide.statement || slide.heading)) {
+        sheet.addText(slide.statement || slide.heading, {
+          x: 0.9,
+          y: 1.7,
+          w: 8.2,
+          h: 2.2,
+          fontFace: theme.headFont,
+          fontSize: 30,
+          bold: true,
+          color: theme.ink,
+          valign: 'middle',
+        });
+      } else if (layout === 'metrics' && (slide.metrics ?? []).length) {
+        const metrics = slide.metrics.slice(0, 4);
+
+        metrics.forEach((metric, position) => {
+          const width = 8.6 / metrics.length;
+          const x = 0.7 + position * width;
+
+          sheet.addText(metric.value, {
+            x,
+            y: 1.7,
+            w: width - 0.2,
+            h: 0.9,
+            fontFace: theme.headFont,
+            fontSize: 32,
+            bold: true,
+            color: theme.accent,
+          });
+
+          sheet.addText(metric.label, {
+            x,
+            y: 2.6,
+            w: width - 0.2,
+            h: 0.9,
+            fontFace: theme.bodyFont,
+            fontSize: 11,
+            color: theme.muted,
+          });
+        });
+      } else if (layout === 'comparison' && slide.comparison?.left?.length) {
+        const { comparison } = slide;
+
+        [
+          { title: comparison.leftTitle, items: comparison.left ?? [], x: 0.7, color: theme.muted },
+          { title: comparison.rightTitle, items: comparison.right ?? [], x: 5.2, color: theme.accent },
+        ].forEach((column) => {
+          sheet.addText(column.title ?? '', {
+            x: column.x,
+            y: 1.4,
+            w: 4.2,
+            h: 0.4,
+            fontFace: theme.bodyFont,
+            fontSize: 11,
+            bold: true,
+            color: column.color,
+          });
+
+          sheet.addText(
+            column.items.map((item) => ({ text: item, options: { bullet: { indent: 14 }, breakLine: true } })),
+            {
+              x: column.x,
+              y: 1.9,
+              w: 4.2,
+              h: 2.6,
+              fontFace: theme.bodyFont,
+              fontSize: 13,
+              color: theme.body,
+              lineSpacingMultiple: 1.3,
+              valign: 'top',
+            },
+          );
+        });
+      } else if (slide.bullets.length) {
         sheet.addText(
           slide.bullets.map((bullet) => ({
             text: bullet,

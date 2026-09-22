@@ -8,6 +8,44 @@ const slideSchema = new mongoose.Schema(
     bullets: { type: [String], default: [] },
     notes: { type: String, default: '', maxlength: 2000 },
     icon: { type: String, default: '', trim: true, maxlength: 40 },
+
+    // Layout is what stops a deck being eight identical bullet lists.
+    layout: {
+      type: String,
+      enum: ['title', 'bullets', 'statement', 'metrics', 'comparison'],
+      default: 'bullets',
+    },
+
+    // One big sentence for a `statement` slide.
+    statement: { type: String, default: '', maxlength: 400 },
+
+    // Big numbers for a `metrics` slide.
+    metrics: {
+      type: [
+        new mongoose.Schema(
+          {
+            value: { type: String, default: '', maxlength: 40 },
+            label: { type: String, default: '', maxlength: 120 },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+
+    // Two opposing columns for a `comparison` slide.
+    comparison: {
+      type: new mongoose.Schema(
+        {
+          leftTitle: { type: String, default: '', maxlength: 120 },
+          left: { type: [String], default: [] },
+          rightTitle: { type: String, default: '', maxlength: 120 },
+          right: { type: [String], default: [] },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
   },
   { _id: false },
 );
